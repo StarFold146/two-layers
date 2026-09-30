@@ -436,15 +436,27 @@ window.addEventListener('resize',function(){sizeWorld();if(st&&st.cur&&wc.style.
 function intro(){
   mood('ghost');who.classList.remove('happy');goHome();
   noteText.textContent=NOTES.utopia;noteEl.className='on';
-  talk.disabled=true;lineEl.classList.add('faint');
+  talk.disabled=false;talk.classList.add('quiet');lineEl.classList.add('faint');
   typeLine('……看下面。');
-  return wait(3000).then(function(){
-    clearTimeout(timer);finish=null;lineEl.textContent='';lineEl.classList.remove('faint');
-    mood('loud');goFace();return wait(1200);
-  }).then(function(){return typeLine('这里这里！我在这儿！')}).then(function(){return wait(1100)})
-    .then(function(){who.classList.add('happy');return typeLine('(^^;;')}).then(function(){return wait(1500)})
-    .then(function(){goHome();return wait(1100)})
-    .then(function(){who.classList.remove('happy');mood('ghost');noteOff();return one('咳。刚才有点太近了。')});
+  var row=$('#talkrow');
+  return new Promise(function(res){
+    var t;
+    function click(){clearTimeout(t);row.removeEventListener('click',click);res(true)}
+    row.addEventListener('click',click);
+    t=setTimeout(function(){row.removeEventListener('click',click);res(false)},reduce?1200:3000);
+  }).then(function(seen){
+    clearTimeout(timer);finish=null;lineEl.classList.remove('faint');talk.classList.remove('quiet');
+    if(seen){
+      hop();
+      return say(['啊，你看见我了！','一般都要我跳到人脸上，才有人看见的。','你眼睛真好。我现在还是半透明的呢。']).then(function(){noteOff()});
+    }
+    talk.disabled=true;lineEl.textContent='';
+    mood('loud');goFace();
+    return wait(1200).then(function(){return typeLine('这里这里！我在这儿！')}).then(function(){return wait(1100)})
+      .then(function(){who.classList.add('happy');return typeLine('(^^;;')}).then(function(){return wait(1500)})
+      .then(function(){goHome();return wait(1100)})
+      .then(function(){who.classList.remove('happy');mood('ghost');noteOff();return one('咳。刚才有点太近了。')});
+  });
 }
 
 /* ---------- 1 调色 ---------- */
