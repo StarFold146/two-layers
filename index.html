@@ -5,9 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>两层颜色</title>
 <meta name="description" content="给一个空世界选第一种颜色，再帮住在里面的小螃蟹几个忙。结果是两层颜色：你想造的，和它实际长成的。">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" media="print" onload="this.media='all'">
 <style>
 html{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{margin:0}
@@ -298,7 +296,7 @@ function fmt(t){return t<10?(Math.round(t*10)/10).toString():Math.round(t).toStr
 /* ---------- 世界的笔触 ---------- */
 var wc=$('#world'),wg=wc.getContext('2d'),off=document.createElement('canvas'),og=off.getContext('2d'),WW=0,WH=0,DPR=1,paintTok=0;
 function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
-function sizeWorld(){DPR=Math.min(window.devicePixelRatio||1,2);WW=window.innerWidth;WH=window.innerHeight;
+function sizeWorld(){DPR=Math.min(window.devicePixelRatio||1,1.5);WW=window.innerWidth;WH=window.innerHeight;
   wc.width=off.width=Math.round(WW*DPR);wc.height=off.height=Math.round(WH*DPR);wg.setTransform(DPR,0,0,DPR,0,0);og.setTransform(DPR,0,0,DPR,0,0)}
 function dab(g,x,y,a,len,w,c,alpha,bend){
   var dx=Math.cos(a)*len/2,dy=Math.sin(a)*len/2;
@@ -306,7 +304,7 @@ function dab(g,x,y,a,len,w,c,alpha,bend){
   g.lineWidth=w;g.lineCap='round';g.beginPath();g.moveTo(x-dx,y-dy);g.quadraticCurveTo(x-dy*bend,y+dx*bend,x+dx,y+dy);g.stroke();
 }
 function renderWorld(g){
-  var c=st.cur,r=rng(st.seed),n=Math.round(WW*WH/430),i,x,y,horizon=WH*0.46;
+  var c=st.cur,r=rng(st.seed),n=Math.min(2200,Math.round(WW*WH/430)),i,x,y,horizon=WH*0.46;
   g.fillStyle=css(c);g.fillRect(0,0,WW,WH);
   for(i=0;i<n;i++){
     x=r()*WW;y=r()*WH;
@@ -337,14 +335,15 @@ function paintWorld(animate,fx,fy){
   renderWorld(og);
   if(!animate||reduce){wg.drawImage(off,0,0,WW,WH);return Promise.resolve()}
   if(fx===undefined){fx=WW/2;fy=WH/2}
-  var r=rng(st.seed+paintTok*7919),spots=[],n=Math.round(WW*WH/5200)+40,i;
+  var r=rng(st.seed+paintTok*7919),spots=[],n=Math.min(420,Math.round(WW*WH/5200)+40),i;
   for(i=0;i<n;i++){var x=r()*WW,y=r()*WH;spots.push({x:x,y:y,d:Math.hypot(x-fx,y-fy)*(0.75+0.5*r()),rx:40+r()*70,ry:14+r()*26,a:(r()-.5)*1.4})}
   spots.sort(function(a,b){return a.d-b.d});
   return new Promise(function(res){
     var per=Math.max(3,Math.ceil(n/70)),at=0;
     (function frame(){
       if(tok!==paintTok){res();return}
-      for(var k=0;k<per&&at<n;k++,at++){var s=spots[at];wg.save();wg.beginPath();wg.ellipse(s.x,s.y,s.rx,s.ry,s.a,0,6.2832);wg.clip();wg.drawImage(off,0,0,WW,WH);wg.restore()}
+      for(var k=0;k<per&&at<n;k++,at++){var s=spots[at],m=Math.max(s.rx,s.ry)+2,sx=Math.max(0,s.x-m),sy=Math.max(0,s.y-m),sw=Math.min(WW,s.x+m)-sx,sh=Math.min(WH,s.y+m)-sy;
+        if(sw>1&&sh>1){wg.save();wg.beginPath();wg.ellipse(s.x,s.y,s.rx,s.ry,s.a,0,6.2832);wg.clip();wg.drawImage(off,sx*DPR,sy*DPR,sw*DPR,sh*DPR,sx,sy,sw,sh);wg.restore()}}
       if(at<n)requestAnimationFrame(frame);else{wg.drawImage(off,0,0,WW,WH);res()}
     })();
   });
