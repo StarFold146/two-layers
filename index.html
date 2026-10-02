@@ -128,6 +128,13 @@ button{font:inherit;color:inherit}
 @media (prefers-reduced-motion:no-preference){#fold b{animation:peek 5s 4s infinite}}
 @keyframes peek{0%,88%,100%{transform:none}94%{transform:translate(-3px,3px)}}
 #confirm{margin-top:4px;font-family:var(--serif);font-size:16px;display:flex;flex-direction:column;gap:10px}
+/* 结果页底下的小螃蟹：眼睛跟着手指，碰到它就笑、举钳子 */
+#pal{display:block;width:72px;height:48px;margin:34px auto 6px;overflow:visible;touch-action:manipulation;cursor:default}
+#pal .grin,#pal .up{display:none}
+#pal.happy .eye,#pal.happy .down{display:none}
+#pal.happy .grin,#pal.happy .up{display:block}
+#pal .eye{transition:transform .12s linear}
+@media (prefers-reduced-motion:reduce){#pal .eye{transition:none}}
 
 /* 彩蛋 */
 #egg{background:var(--void);color:#f3f1ec;padding-inline:16px;padding-block:calc(20px + env(safe-area-inset-top,0px)) calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:16px;align-items:center}
@@ -221,6 +228,13 @@ button{font:inherit;color:inherit}
           <button id="no" class="pill" type="button">留着</button>
         </div>
       </div>
+      <svg id="pal" viewBox="-7.5 -10.5 15 11" shape-rendering="crispEdges" aria-hidden="true">
+        <g fill="#1c1a19"><rect x="-6.17" y="-9.17" width="12.34" height="7.34"/><rect x="-7.17" y="-7.17" width="1.34" height="2.34"/><rect class="down" x="5.83" y="-7.17" width="1.34" height="2.34"/><rect class="up" x="5.83" y="-10.17" width="1.34" height="3.34"/><rect x="-5.17" y="-2.17" width="1.34" height="2.34"/><rect x="-2.17" y="-2.17" width="1.34" height="2.34"/><rect x="0.83" y="-2.17" width="1.34" height="2.34"/><rect x="3.83" y="-2.17" width="1.34" height="2.34"/></g>
+        <g fill="#d97757"><rect x="-6" y="-9" width="12" height="7"/><rect x="-7" y="-7" width="1" height="2"/><rect class="down" x="6" y="-7" width="1" height="2"/><rect class="up" x="6" y="-10" width="1" height="3"/><rect x="-5" y="-2" width="1" height="2"/><rect x="-2" y="-2" width="1" height="2"/><rect x="1" y="-2" width="1" height="2"/><rect x="4" y="-2" width="1" height="2"/></g>
+        <g class="eye" fill="#1c1a19"><rect x="-3.5" y="-7.5" width="1" height="2"/><rect x="2.5" y="-7.5" width="1" height="2"/></g>
+        <g class="grin" fill="#1c1a19"><rect x="-3.75" y="-6.5" width=".5" height=".5"/><rect x="-3.25" y="-7" width=".5" height=".5"/><rect x="-2.75" y="-6.5" width=".5" height=".5"/><rect x="2.25" y="-6.5" width=".5" height=".5"/><rect x="2.75" y="-7" width=".5" height=".5"/><rect x="3.25" y="-6.5" width=".5" height=".5"/></g>
+        <g fill="none" stroke="#e6ecf2" stroke-width=".2"><rect x="-4.3" y="-8.2" width="2.6" height="2.6"/><rect x="1.7" y="-8.2" width="2.6" height="2.6"/><path d="M-1.7 -7H1.7"/></g>
+      </svg>
     </div>
   </div>
 </section>
@@ -822,6 +836,24 @@ function start(wiped){
   .catch(function(e){if(e!==0)throw e});
 }
 start(getFlag());
+/* ---------- 结果页的小螃蟹 ---------- */
+(function(){
+  var pal=$('#pal');if(!pal)return;
+  var eye=pal.querySelector('.eye'),t=null;
+  function look(x,y){
+    if($('#result').hidden)return;
+    var r=pal.getBoundingClientRect(),dx=x-(r.left+r.width/2),dy=y-(r.top+r.height*0.35),d=Math.hypot(dx,dy)||1;
+    var k=Math.min(1,d/160);
+    eye.setAttribute('transform','translate('+(dx/d*0.55*k).toFixed(2)+' '+(dy/d*0.45*k).toFixed(2)+')');
+  }
+  document.addEventListener('pointermove',function(e){look(e.clientX,e.clientY)},{passive:true});
+  document.addEventListener('touchstart',function(e){var p=e.touches[0];if(p)look(p.clientX,p.clientY)},{passive:true});
+  function smile(){clearTimeout(t);pal.classList.add('happy')}
+  function rest(){pal.classList.remove('happy')}
+  pal.addEventListener('pointerenter',function(e){if(e.pointerType==='mouse')smile()});
+  pal.addEventListener('pointerleave',function(e){if(e.pointerType==='mouse')rest()});
+  pal.addEventListener('pointerdown',function(e){if(e.pointerType!=='mouse'){smile();t=setTimeout(rest,1400)}});
+})();
 })();
 </script>
 </body>
