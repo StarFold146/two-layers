@@ -848,6 +848,7 @@ start(getFlag());
   }
   document.addEventListener('pointermove',function(e){look(e.clientX,e.clientY)},{passive:true});
   document.addEventListener('touchstart',function(e){var p=e.touches[0];if(p)look(p.clientX,p.clientY)},{passive:true});
+  document.addEventListener('touchmove',function(e){var p=e.touches[0];if(p)look(p.clientX,p.clientY)},{passive:true});
   function smile(){clearTimeout(t);pal.classList.add('happy')}
   function rest(){pal.classList.remove('happy')}
   pal.addEventListener('pointerenter',function(e){if(e.pointerType==='mouse')smile()});
