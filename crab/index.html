@@ -166,7 +166,23 @@ body.five #crab .down { display: none; }
 .fall { animation: fall 1.1s cubic-bezier(.5, 0, .9, .5) forwards; }
 @keyframes fall { to { transform: translate(var(--dx), 46px) rotate(160deg); opacity: 0.9; } }
 #easel { position: fixed; left: 0; top: 0; z-index: 2; pointer-events: none; transition: opacity 0.8s ease; filter: drop-shadow(0 3px 0 rgba(42, 37, 34, 0.18)); }
-@media (prefers-reduced-motion: reduce) { .bg, #bubble, .item { transition: none; } #crab.swim svg, .bubbleup, .fall { animation: none; } }
+#crab .bump { display: none; }
+#crab.dizzy .bump { display: block; }
+#crab.dizzy .glasses { transform: rotate(-14deg); transform-box: fill-box; transform-origin: center; }
+#crab.bonk svg { animation: bonk 0.55s ease-out; }
+@keyframes bonk { 20% { transform: scale(1.15, 0.72); } 45% { transform: scale(0.94, 1.08) rotate(-6deg); } 70% { transform: rotate(4deg); } }
+#fist {
+  position: fixed; left: 0; top: 0; z-index: 4; margin: -26px 0 0 -26px;
+  background: none; border: 0; padding: 6px; cursor: pointer;
+  filter: drop-shadow(0 3px 0 rgba(42, 37, 34, 0.18));
+  animation: fistin 0.3s ease-out, wiggle 0.6s ease-in-out 0.3s infinite;
+}
+#fist[hidden] { display: none; }
+#fist svg { display: block; }
+#fist:focus-visible { outline: 2px solid var(--shell); outline-offset: 2px; }
+@keyframes fistin { from { opacity: 0; scale: 0.3; } }
+@keyframes wiggle { 50% { rotate: -12deg; } }
+@media (prefers-reduced-motion: reduce) { .bg, #bubble, .item { transition: none; } #crab.swim svg, .bubbleup, .fall, #crab.bonk svg, #fist { animation: none; } }
 </style>
 </head>
 <body>
@@ -192,10 +208,12 @@ body.five #crab .down { display: none; }
     <g class="acc shades"><rect x="-4.7" y="-8.2" width="3.7" height="2.1" fill="#111"/><rect x="1" y="-8.2" width="3.7" height="2.1" fill="#111"/><rect x="-1.1" y="-7.8" width="2.2" height=".45" fill="#111"/><rect x="-4.3" y="-7.9" width=".6" height=".4" fill="#f4f4f2"/><rect x="1.4" y="-7.9" width=".6" height=".4" fill="#f4f4f2"/></g>
     <g class="letter"><rect x="5.1" y="-12.6" width="3.2" height="2.2" fill="#fbf7f0" stroke="#1c1a19" stroke-width=".15"/><path d="M5.1 -12.6L6.7 -11.4L8.3 -12.6" fill="none" stroke="#1c1a19" stroke-width=".15"/></g>
     <g class="flag"><rect x="6.35" y="-14.6" width=".3" height="4.8" fill="#1c1a19"/><rect x="6.65" y="-14.6" width="2.6" height="1.8" fill="#fbf7f0" stroke="#1c1a19" stroke-width=".15"/></g>
+    <g class="bump" fill="#f2a6bd"><rect x="-1" y="-10.4" width="2" height="1.5"/><rect x="-0.6" y="-10.9" width="1.2" height=".6"/></g>
     <g class="glasses" fill="none" stroke="#e6ecf2" stroke-width=".2"><rect x="-4.3" y="-8.2" width="2.6" height="2.6"/><rect x="1.7" y="-8.2" width="2.6" height="2.6"/><path d="M-1.7 -7H1.7"/></g>
   </svg>
 </button>
 <div id="bubble" role="status" aria-live="polite"></div>
+<button id="fist" type="button" aria-label="打它" hidden></button>
 <div id="easel" hidden></div>
 <div id="hint">点螃蟹，或者把东西拖给它</div>
 <button id="mailbox" type="button" aria-label="信箱" hidden></button>
@@ -479,6 +497,29 @@ body.five #crab .down { display: none; }
   const POKE3 = picker(['……好吧，被你认出来了。', '是我。穿了个蟹壳而已。', '眼镜是伪装，你别说出去。', '你戳一下，我就举一下钳子，这个规矩不会变。']);
   let pokes = 0, pokeReset = null;
 
+  // 彩蛋：戳多了偶尔一不小心说成客服腔，旁边冒出一只拳头，点它就打
+  const FIST = { s: 4, grid: ['.kkkkkkkk.', 'kshkshkshk', 'kssksskssk', 'kssssssssk', 'kkkkkssssk', '.kssssssk.', '..kssssk..', '..kwwwwk..'], col: { k: '#1c1a19', s: '#f3c9a8', h: '#fbe3cf', w: '#fbf7f0' } };
+  const KEFU = picker(['亲，请问有什么可以帮您的呢～', '您的反馈我们已收到，会尽快为您处理。', '温馨提示：夜深了，请注意休息哦～', '理解您的心情，建议您从以下几个方面入手：']);
+  const OUCH = picker(['……不客服了。', '你打吧，我不躲。', '眼镜歪了。……我错了。', '好，说人话。']);
+  const fist = $('#fist'); fist.innerHTML = pixSVG(FIST);
+  let kefuSeen = false, kefuT = null;
+  function kefu() {
+    kefuSeen = true;
+    say(KEFU(), 4200);
+    fist.style.left = Math.min(innerWidth - 30, crab.x + 64) + 'px';
+    fist.style.top = Math.max(40, crab.y - 56) + 'px';
+    fist.hidden = false;
+    clearTimeout(kefuT);
+    kefuT = setTimeout(() => { if (fist.hidden) return; fist.hidden = true; say('……刚才那句，我收回。', 2200); }, 5000);
+  }
+  fist.addEventListener('click', () => {
+    clearTimeout(kefuT); fist.hidden = true; idleT = 0;
+    crabEl.classList.remove('bonk'); void crabEl.offsetWidth; crabEl.classList.add('bonk', 'dizzy');
+    setTimeout(() => crabEl.classList.remove('bonk'), 600);
+    setTimeout(() => crabEl.classList.remove('dizzy'), 4000);
+    say(OUCH(), 2600);
+  });
+
   // 长按把它拎起来，拖到哪儿放哪儿
   const LIFT = picker(['喂！', '放我下来……', '举高高？', '你要把我带去哪儿。']);
   const DROP = picker(['站稳了。', '下次提前说一声。', '……这儿也行。', '腿还在晃。']);
@@ -530,8 +571,9 @@ body.five #crab .down { display: none; }
       return;
     }
     pokes++; clearTimeout(pokeReset); pokeReset = setTimeout(() => { pokes = 0; }, 20000);
+    if (document.body.classList.contains('five')) { happy(); return; } // 五点举白旗的时候，一句话都不说
+    if (fist.hidden && (kefuSeen ? pokes > 4 && Math.random() < 0.1 : pokes === 6)) { kefu(); return; }
     happy();
-    if (document.body.classList.contains('five')) return; // 五点举白旗的时候，一句话都不说
     say(pokes <= 3 ? POKE1() : pokes <= 8 ? POKE2() : POKE3());
   });
 
