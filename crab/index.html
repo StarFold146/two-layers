@@ -89,7 +89,7 @@ body.night #hint { color: rgba(232, 236, 246, 0.55); }
 body.five #crab .flag, body.five #crab .up { display: block; }
 body.five #crab .down { display: none; }
 #mailbox {
-  position: fixed; right: 12px; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); z-index: 2;
+  position: fixed; right: 12px; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); z-index: 5;
   background: none; border: 0; padding: 6px; cursor: pointer;
   filter: drop-shadow(0 3px 0 rgba(42, 37, 34, 0.18));
 }
@@ -126,7 +126,7 @@ body.five #crab .down { display: none; }
 #crab .acc { display: none; }
 #crab.w-straw .straw, #crab.w-beret .beret, #crab.w-crown .crown, #crab.w-lily .lily, #crab.w-phones .phones, #crab.w-bow .bow { display: block; }
 #closetbtn {
-  position: fixed; left: 12px; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); z-index: 2;
+  position: fixed; left: 12px; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); z-index: 5;
   background: none; border: 0; padding: 6px; cursor: pointer;
   filter: drop-shadow(0 3px 0 rgba(42, 37, 34, 0.18));
 }
@@ -455,7 +455,7 @@ body.five #crab .down { display: none; }
   // 角落：一半藏在画框外面，探出头来
   function corners() {
     const W = innerWidth, H = innerHeight;
-    return [[18, H - 30], [W - 18, H - 30], [18, H * 0.8], [W - 18, H * 0.78], [W * 0.3, H + 22], [W * 0.72, H + 22]];
+    return [[18, H * 0.9], [W - 18, H * 0.88], [18, H * 0.8], [W - 18, H * 0.78], [W * 0.32, H + 22], [W * 0.66, H + 22]];
   }
   function hide() {
     const [x, y] = pickOne(corners());
