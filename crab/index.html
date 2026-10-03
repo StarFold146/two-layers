@@ -123,6 +123,33 @@ body.five #crab .down { display: none; }
 #form button:disabled { opacity: 0.5; cursor: default; }
 #formmsg { grid-column: 1 / -1; margin: 0; font-size: 13px; color: var(--soft); min-height: 1.2em; }
 #mailbox:focus-visible, #sheet button:focus-visible, #form textarea:focus-visible, #form input:focus-visible { outline: 2px solid var(--shell); outline-offset: 2px; }
+#crab .acc { display: none; }
+#crab.w-straw .straw, #crab.w-beret .beret, #crab.w-crown .crown, #crab.w-lily .lily, #crab.w-phones .phones, #crab.w-bow .bow { display: block; }
+#closetbtn {
+  position: fixed; left: 12px; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); z-index: 2;
+  background: none; border: 0; padding: 6px; cursor: pointer;
+  filter: drop-shadow(0 3px 0 rgba(42, 37, 34, 0.18));
+}
+#closetbtn svg { display: block; }
+#closet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 6;
+  display: flex; flex-direction: column; gap: 12px;
+  background: var(--paper); color: var(--ink);
+  border-top: 1px solid var(--edge); border-radius: 18px 18px 0 0;
+  padding: 16px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -10px 40px rgba(42, 37, 34, 0.16);
+}
+#closet header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; max-width: 36em; width: 100%; margin: 0 auto; }
+#closet h2 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: 0.1em; }
+#closet .close { font: inherit; font-size: 14px; color: var(--soft); background: none; border: 0; cursor: pointer; padding: 4px; }
+#closet .row { display: flex; flex-wrap: wrap; gap: 8px; max-width: 36em; width: 100%; margin: 0 auto; }
+#closet .label { max-width: 36em; width: 100%; margin: 0 auto; font-size: 13px; color: var(--soft); letter-spacing: 0.1em; }
+#closet .row button {
+  font: inherit; font-size: 15px; color: var(--ink); background: #fffdf9;
+  border: 1px solid var(--edge); border-radius: 999px; padding: 6px 14px; cursor: pointer;
+}
+#closet .row button[aria-pressed="true"] { background: var(--shell); border-color: var(--shell); color: var(--paper); }
+#closetbtn:focus-visible, #closet button:focus-visible { outline: 2px solid var(--shell); outline-offset: 2px; }
 #crab .letter { display: none; }
 #crab.mail .letter, #crab.mail .up { display: block; }
 #crab.mail .down { display: none; }
@@ -149,6 +176,12 @@ body.five #crab .down { display: none; }
     <g fill="#d97757"><rect x="-6" y="-9" width="12" height="7"/><rect x="-7" y="-7" width="1" height="2"/><rect class="down" x="6" y="-7" width="1" height="2"/><rect class="up" x="6" y="-10" width="1" height="3"/><rect class="l1" x="-5" y="-2" width="1" height="2"/><rect class="l2" x="-2" y="-2" width="1" height="2"/><rect class="l1" x="1" y="-2" width="1" height="2"/><rect class="l2" x="4" y="-2" width="1" height="2"/></g>
     <g class="eye" fill="#1c1a19"><rect x="-3.5" y="-7.5" width="1" height="2"/><rect x="2.5" y="-7.5" width="1" height="2"/></g>
     <g class="grin" fill="#1c1a19"><rect x="-3.75" y="-6.5" width=".5" height=".5"/><rect x="-3.25" y="-7" width=".5" height=".5"/><rect x="-2.75" y="-6.5" width=".5" height=".5"/><rect x="2.25" y="-6.5" width=".5" height=".5"/><rect x="2.75" y="-7" width=".5" height=".5"/><rect x="3.25" y="-6.5" width=".5" height=".5"/></g>
+    <g class="acc bow"><rect x="-1.8" y="-3.7" width="1.3" height="1.4" fill="#d9534f"/><rect x="0.5" y="-3.7" width="1.3" height="1.4" fill="#d9534f"/><rect x="-0.5" y="-3.4" width="1" height=".8" fill="#a83b38"/></g>
+    <g class="acc straw"><rect x="-3" y="-11.4" width="6" height="2" fill="#e8c56a"/><rect x="-3" y="-10.1" width="6" height=".5" fill="#c0504d"/><rect x="-5.2" y="-9.6" width="10.4" height=".75" fill="#d9b456"/></g>
+    <g class="acc beret"><rect x="-4.2" y="-10.5" width="7.4" height="1.6" fill="#2f3b5c"/><rect x="2.6" y="-10.1" width="1.6" height="1" fill="#2f3b5c"/><rect x="-0.4" y="-11.1" width=".6" height=".7" fill="#2f3b5c"/></g>
+    <g class="acc crown"><rect x="-2.5" y="-10.3" width="5" height="1.3" fill="#f2c14e"/><rect x="-2.5" y="-11.3" width="1" height="1" fill="#f2c14e"/><rect x="-0.5" y="-11.6" width="1" height="1.3" fill="#f2c14e"/><rect x="1.5" y="-11.3" width="1" height="1" fill="#f2c14e"/><rect x="-0.2" y="-10" width=".45" height=".45" fill="#d9534f"/></g>
+    <g class="acc lily"><rect x="1.7" y="-9.35" width="1.1" height=".45" fill="#6aa84f"/><rect x="2.8" y="-10.3" width=".6" height=".6" fill="#f2a6bd"/><rect x="2.2" y="-9.7" width=".6" height=".6" fill="#f2a6bd"/><rect x="3.4" y="-9.7" width=".6" height=".6" fill="#f2a6bd"/><rect x="2.8" y="-9.7" width=".6" height=".6" fill="#f6d55c"/></g>
+    <g class="acc phones"><rect x="-5.2" y="-10.4" width="10.4" height=".55" fill="#22243a"/><rect x="-5.6" y="-10.2" width=".55" height="1.4" fill="#22243a"/><rect x="5.05" y="-10.2" width=".55" height="1.4" fill="#22243a"/><rect x="-6.5" y="-8.9" width="1.3" height="2.3" fill="#e0566b"/><rect x="5.2" y="-8.9" width="1.3" height="2.3" fill="#e0566b"/></g>
     <g class="letter"><rect x="5.1" y="-12.6" width="3.2" height="2.2" fill="#fbf7f0" stroke="#1c1a19" stroke-width=".15"/><path d="M5.1 -12.6L6.7 -11.4L8.3 -12.6" fill="none" stroke="#1c1a19" stroke-width=".15"/></g>
     <g class="flag"><rect x="6.35" y="-14.6" width=".3" height="4.8" fill="#1c1a19"/><rect x="6.65" y="-14.6" width="2.6" height="1.8" fill="#fbf7f0" stroke="#1c1a19" stroke-width=".15"/></g>
     <g class="glasses" fill="none" stroke="#e6ecf2" stroke-width=".2"><rect x="-4.3" y="-8.2" width="2.6" height="2.6"/><rect x="1.7" y="-8.2" width="2.6" height="2.6"/><path d="M-1.7 -7H1.7"/></g>
@@ -158,6 +191,14 @@ body.five #crab .down { display: none; }
 <div id="easel" hidden></div>
 <div id="hint">点螃蟹，或者把东西拖给它</div>
 <button id="mailbox" type="button" aria-label="信箱" hidden></button>
+<button id="closetbtn" type="button" aria-label="衣柜"></button>
+<section id="closet" aria-label="衣柜" hidden>
+  <header><h2>衣柜</h2><button class="close" type="button" id="closetclose">关上</button></header>
+  <p class="label">头上</p>
+  <div class="row" id="rowhead"></div>
+  <p class="label">脖子上</p>
+  <div class="row" id="rowneck"></div>
+</section>
 <section id="sheet" aria-label="信箱" hidden>
   <header><h2>信箱</h2><button class="close" type="button" id="sheetclose">收起</button></header>
   <div id="notes"></div>
@@ -586,6 +627,7 @@ body.five #crab .down { display: none; }
     if (hasUnread && sheet.hidden) { const dot = document.createElement('span'); dot.className = 'dot'; mb.appendChild(dot); }
   }
   function openSheet() {
+    $('#closet').hidden = true;
     sheet.hidden = false; renderNotes();
     const latest = replies.length ? String(replies[replies.length - 1].at) : '';
     if (latest) { seenAt = latest; try { localStorage.setItem('crab-seen', latest); } catch (e) {} }
@@ -693,6 +735,41 @@ body.five #crab .down { display: none; }
     setTimeout(() => { g.remove(); }, 1300);
     setTimeout(() => { crabEl.classList.remove('bare'); say('……刚才那句不算。', 1800); }, 3600);
   }
+
+  // ---------------- 衣柜：换了什么，下次打开还穿着 ----------------
+  const CLOSET = { s: 4, grid: ['bbbbbbbb', 'bwwbbwwb', 'bwwbbwwb', 'bwkbbkwb', 'bwwbbwwb', 'bwwbbwwb', 'bbbbbbbb', 'b......b'], col: { b: '#8a5a3c', w: '#c9925e', k: '#f2d38a' } };
+  const HEAD = [['none', '不戴', ['头上空了，凉快。']], ['straw', '草帽', ['像不像去写生的。', '睡莲那边晒。']], ['beret', '贝雷帽', ['画家标配。', '歪着戴才对。']], ['crown', '小皇冠', ['叫陛下。', '……算了，叫我名字就行。']], ['lily', '睡莲', ['从画里摘的，别告诉莫奈。']], ['phones', '耳机', ['听不见你说话了。……骗你的。']]];
+  const NECK = [['none', '不系', ['领口松快了。']], ['bow', '领结', ['正式场合。', '今天约会吗。']]];
+  let wear = { head: 'none', neck: 'none' };
+  try { wear = Object.assign(wear, JSON.parse(localStorage.getItem('crab-wear') || '{}')); } catch (e) {}
+  const closet = $('#closet');
+  $('#closetbtn').innerHTML = pixSVG(CLOSET);
+  function applyWear() {
+    [...crabEl.classList].filter(c => c.startsWith('w-')).forEach(c => crabEl.classList.remove(c));
+    if (wear.head !== 'none') crabEl.classList.add('w-' + wear.head);
+    if (wear.neck !== 'none') crabEl.classList.add('w-' + wear.neck);
+    try { localStorage.setItem('crab-wear', JSON.stringify(wear)); } catch (e) {}
+  }
+  function buildRow(el, list, slot) {
+    el.innerHTML = '';
+    list.forEach(([key, label, lines]) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
+      b.setAttribute('aria-pressed', String(wear[slot] === key));
+      b.addEventListener('click', () => {
+        wear[slot] = key; applyWear(); buildRow(el, list, slot);
+        happy(); say(pickOne(lines), 2200);
+      });
+      el.appendChild(b);
+    });
+  }
+  function openCloset() {
+    sheet.hidden = true; closet.hidden = false;
+    buildRow($('#rowhead'), HEAD, 'head'); buildRow($('#rowneck'), NECK, 'neck');
+    if (!atCenter() && !busy && !held) walkTo(innerWidth / 2, CY());
+  }
+  $('#closetbtn').addEventListener('click', () => { if (closet.hidden) openCloset(); else closet.hidden = true; });
+  $('#closetclose').addEventListener('click', () => { closet.hidden = true; });
+  applyWear();
 
   // ---------------- 开始 ----------------
   showPeriod(true);
