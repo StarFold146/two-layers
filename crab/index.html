@@ -51,6 +51,9 @@ body {
 #crab .eye { transition: transform 0.12s linear; }
 #crab.walk.s1 .l1, #crab.walk.s2 .l2 { transform: translateY(-0.7px); }
 #crab.munch .up { transform: translateY(1px); }
+#crab svg { transition: transform 0.25s ease; }
+#crab.lifted svg { transform: scale(1.08) rotate(-5deg); filter: drop-shadow(0 14px 6px rgba(42, 37, 34, 0.22)); }
+#crab.lifted.s1 .l1, #crab.lifted.s2 .l2 { transform: translateY(-0.7px); }
 .item {
   position: fixed; left: 0; top: 0; z-index: 2;
   background: none; border: 0; padding: 6px; margin: 0; cursor: grab;
@@ -110,13 +113,13 @@ body.five #crab .down { display: none; }
 .note.mine { align-self: flex-end; background: #efe6da; }
 .note.crab { align-self: flex-start; background: #f6e0d6; }
 .note .meta { display: block; margin-top: 4px; font-size: 12px; color: var(--soft); letter-spacing: 0.06em; }
-#form { display: grid; grid-template-columns: 1fr auto; gap: 8px; max-width: 36em; width: 100%; margin: 0 auto; }
+#form { display: grid; grid-template-columns: 1fr; gap: 8px; max-width: 36em; width: 100%; margin: 0 auto; }
 #form textarea { grid-column: 1 / -1; min-height: 4.6em; resize: vertical; }
 #form textarea, #form input {
   font: inherit; font-size: 16px; color: var(--ink); background: #fffdf9;
   border: 1px solid var(--edge); border-radius: 10px; padding: 8px 10px; min-width: 0;
 }
-#form button { font: inherit; font-size: 15px; letter-spacing: 0.12em; color: var(--paper); background: var(--shell); border: 0; border-radius: 10px; padding: 8px 16px; cursor: pointer; }
+#form button { justify-self: end; font: inherit; font-size: 15px; letter-spacing: 0.12em; color: var(--paper); background: var(--shell); border: 0; border-radius: 10px; padding: 8px 16px; cursor: pointer; }
 #form button:disabled { opacity: 0.5; cursor: default; }
 #formmsg { grid-column: 1 / -1; margin: 0; font-size: 13px; color: var(--soft); min-height: 1.2em; }
 #mailbox:focus-visible, #sheet button:focus-visible, #form textarea:focus-visible, #form input:focus-visible { outline: 2px solid var(--shell); outline-offset: 2px; }
@@ -146,7 +149,6 @@ body.five #crab .down { display: none; }
   <div id="notes"></div>
   <form id="form">
     <textarea id="notetext" maxlength="500" placeholder="想说什么，写在这儿" aria-label="纸条内容"></textarea>
-    <input id="notesign" maxlength="20" placeholder="署名" aria-label="署名">
     <button type="submit" id="notesend">塞进去</button>
     <p id="formmsg" role="status"></p>
   </form>
@@ -389,7 +391,39 @@ body.five #crab .down { display: none; }
   const POKE3 = picker(['……好吧，被你认出来了。', '是我。穿了个蟹壳而已。', '眼镜是伪装，你别说出去。', '你戳一下，我就举一下钳子，这个规矩不会变。']);
   let pokes = 0, pokeReset = null;
 
+  // 长按把它拎起来，拖到哪儿放哪儿
+  const LIFT = picker(['喂！', '放我下来……', '举高高？', '你要把我带去哪儿。']);
+  const DROP = picker(['站稳了。', '下次提前说一声。', '……这儿也行。', '腿还在晃。']);
+  let lifting = false, liftTimer = null, suppressClick = false, lsx = 0, lsy = 0;
+  crabEl.addEventListener('pointerdown', (e) => {
+    if (busy) return;
+    lsx = e.clientX; lsy = e.clientY;
+    try { crabEl.setPointerCapture(e.pointerId); } catch (err) {}
+    clearTimeout(liftTimer);
+    liftTimer = setTimeout(() => {
+      lifting = true; crabEl.classList.add('lifted');
+      crab.tx = crab.x; crab.ty = crab.y; crab.onArrive = null;
+      say(LIFT(), 1800);
+    }, 420);
+  });
+  crabEl.addEventListener('pointermove', (e) => {
+    if (!lifting) { if (Math.hypot(e.clientX - lsx, e.clientY - lsy) > 10) clearTimeout(liftTimer); return; }
+    crab.x = crab.tx = Math.max(20, Math.min(innerWidth - 20, e.clientX));
+    crab.y = crab.ty = Math.max(90, Math.min(innerHeight + 10, e.clientY + 34));
+  });
+  const liftEnd = () => {
+    clearTimeout(liftTimer);
+    if (!lifting) return;
+    lifting = false; suppressClick = true; idleT = 0;
+    crabEl.classList.remove('lifted', 's1', 's2');
+    say(DROP(), 1800);
+  };
+  crabEl.addEventListener('pointerup', liftEnd);
+  crabEl.addEventListener('pointercancel', liftEnd);
+  crabEl.addEventListener('contextmenu', (e) => e.preventDefault());
+
   crabEl.addEventListener('click', () => {
+    if (suppressClick) { suppressClick = false; return; }
     idleT = 0;
     if (held) { putDown(); return; }
     if (busy) return;
@@ -464,6 +498,7 @@ body.five #crab .down { display: none; }
       crabEl.classList.remove('walk', 's1', 's2');
       const f = crab.onArrive; crab.onArrive = null; if (f) f();
     }
+    if (lifting) { crab.stepT += dt; if (crab.stepT > 0.09) { crab.stepT = 0; crab.step ^= 1; crabEl.classList.toggle('s1', crab.step === 0); crabEl.classList.toggle('s2', crab.step === 1); } idleT = 0; }
     if (held) { held.x = crab.x + 4; held.y = crab.y - 22; place(held); }
     setCrab();
     // 闲着太久，就溜去别的角落探头
@@ -487,7 +522,7 @@ body.five #crab .down { display: none; }
       const div = document.createElement('div'); div.className = 'note ' + n.who;
       div.textContent = String(n.text || '');
       const meta = document.createElement('span'); meta.className = 'meta';
-      meta.textContent = (n.who === 'crab' ? '螃蟹' : (n.sign ? String(n.sign) : '没署名')) + ' · ' + fmt(n.at);
+      meta.textContent = (n.who === 'crab' ? '螃蟹' : '你') + ' · ' + fmt(n.at);
       div.appendChild(meta); notesEl.appendChild(div);
     });
     notesEl.scrollTop = notesEl.scrollHeight;
@@ -506,12 +541,12 @@ body.five #crab .down { display: none; }
   $('#sheetclose').addEventListener('click', () => { sheet.hidden = true; });
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const text = $('#notetext').value.trim(), sign = $('#notesign').value.trim();
+    const text = $('#notetext').value.trim();
     if (!text) { $('#formmsg').textContent = '纸条是空的。'; return; }
     if (!db) { $('#formmsg').textContent = '这个信箱现在连不上，纸条没送出去。'; return; }
     $('#notesend').disabled = true; $('#formmsg').textContent = '';
     try {
-      await db.collection('notes').add({ text, sign, at: new Date().toISOString(), period: shown });
+      await db.collection('notes').add({ text, at: new Date().toISOString(), period: shown });
       $('#notetext').value = '';
       $('#formmsg').textContent = '塞进去了。';
       sheet.hidden = true;
@@ -526,8 +561,6 @@ body.five #crab .down { display: none; }
     const u = await window.claude.use('user');
     if (!(u && await u.isOwner())) return;
     db = d; mb.hidden = false;
-    try { const sg = localStorage.getItem('crab-sign'); if (sg) $('#notesign').value = sg; } catch (e) {}
-    $('#notesign').addEventListener('change', () => { try { localStorage.setItem('crab-sign', $('#notesign').value.trim()); } catch (e) {} });
     db.collection('notes').orderBy('at', 'asc').limit(300).onSnapshot((snap) => { notes = snap.docs.map(x => x.data()); renderNotes(); }, () => {});
     db.collection('replies').orderBy('at', 'asc').limit(300).onSnapshot((snap) => { replies = snap.docs.map(x => x.data()); renderNotes(); }, () => {});
   })();
