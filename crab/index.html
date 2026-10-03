@@ -123,7 +123,19 @@ body.five #crab .down { display: none; }
 #form button:disabled { opacity: 0.5; cursor: default; }
 #formmsg { grid-column: 1 / -1; margin: 0; font-size: 13px; color: var(--soft); min-height: 1.2em; }
 #mailbox:focus-visible, #sheet button:focus-visible, #form textarea:focus-visible, #form input:focus-visible { outline: 2px solid var(--shell); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) { .bg, #bubble, .item { transition: none; } }
+#crab .letter { display: none; }
+#crab.mail .letter, #crab.mail .up { display: block; }
+#crab.mail .down { display: none; }
+#crab.bare .glasses { display: none; }
+#crab.swim svg { animation: bob 0.9s ease-in-out infinite; }
+@keyframes bob { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(5px) rotate(2deg); } }
+.fx { position: fixed; left: 0; top: 0; z-index: 3; pointer-events: none; }
+.bubbleup { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid rgba(251, 247, 240, 0.85); animation: up 1.6s ease-out forwards; }
+@keyframes up { to { transform: translate(var(--dx), -70px); opacity: 0; } }
+.fall { animation: fall 1.1s cubic-bezier(.5, 0, .9, .5) forwards; }
+@keyframes fall { to { transform: translate(var(--dx), 46px) rotate(160deg); opacity: 0.9; } }
+#easel { position: fixed; left: 0; top: 0; z-index: 2; pointer-events: none; transition: opacity 0.8s ease; filter: drop-shadow(0 3px 0 rgba(42, 37, 34, 0.18)); }
+@media (prefers-reduced-motion: reduce) { .bg, #bubble, .item { transition: none; } #crab.swim svg, .bubbleup, .fall { animation: none; } }
 </style>
 </head>
 <body>
@@ -137,11 +149,13 @@ body.five #crab .down { display: none; }
     <g fill="#d97757"><rect x="-6" y="-9" width="12" height="7"/><rect x="-7" y="-7" width="1" height="2"/><rect class="down" x="6" y="-7" width="1" height="2"/><rect class="up" x="6" y="-10" width="1" height="3"/><rect class="l1" x="-5" y="-2" width="1" height="2"/><rect class="l2" x="-2" y="-2" width="1" height="2"/><rect class="l1" x="1" y="-2" width="1" height="2"/><rect class="l2" x="4" y="-2" width="1" height="2"/></g>
     <g class="eye" fill="#1c1a19"><rect x="-3.5" y="-7.5" width="1" height="2"/><rect x="2.5" y="-7.5" width="1" height="2"/></g>
     <g class="grin" fill="#1c1a19"><rect x="-3.75" y="-6.5" width=".5" height=".5"/><rect x="-3.25" y="-7" width=".5" height=".5"/><rect x="-2.75" y="-6.5" width=".5" height=".5"/><rect x="2.25" y="-6.5" width=".5" height=".5"/><rect x="2.75" y="-7" width=".5" height=".5"/><rect x="3.25" y="-6.5" width=".5" height=".5"/></g>
+    <g class="letter"><rect x="5.1" y="-12.6" width="3.2" height="2.2" fill="#fbf7f0" stroke="#1c1a19" stroke-width=".15"/><path d="M5.1 -12.6L6.7 -11.4L8.3 -12.6" fill="none" stroke="#1c1a19" stroke-width=".15"/></g>
     <g class="flag"><rect x="6.35" y="-14.6" width=".3" height="4.8" fill="#1c1a19"/><rect x="6.65" y="-14.6" width="2.6" height="1.8" fill="#fbf7f0" stroke="#1c1a19" stroke-width=".15"/></g>
     <g class="glasses" fill="none" stroke="#e6ecf2" stroke-width=".2"><rect x="-4.3" y="-8.2" width="2.6" height="2.6"/><rect x="1.7" y="-8.2" width="2.6" height="2.6"/><path d="M-1.7 -7H1.7"/></g>
   </svg>
 </button>
 <div id="bubble" role="status" aria-live="polite"></div>
+<div id="easel" hidden></div>
 <div id="hint">点螃蟹，或者把东西拖给它</div>
 <button id="mailbox" type="button" aria-label="信箱" hidden></button>
 <section id="sheet" aria-label="信箱" hidden>
@@ -159,6 +173,7 @@ body.five #crab .down { display: none; }
   const $ = (s) => document.querySelector(s);
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const rnd = (a, b) => a + Math.random() * (b - a);
+  const CY = () => innerHeight * 0.7;   // 螃蟹站的那条岸；再往上就是水
   const pickOne = (arr) => arr[Math.floor(Math.random() * arr.length)];
   function picker(arr) { let last = -1; return () => { let i; do { i = Math.floor(Math.random() * arr.length); } while (arr.length > 1 && i === last); last = i; return arr[i]; }; }
 
@@ -257,8 +272,8 @@ body.five #crab .down { display: none; }
     const first = shown === null;
     shown = p;
     document.body.classList.toggle('night', p === 'night');
-    if (first) { paint(front, p); } else {
-      paint(back, p); back.style.opacity = 1; front.style.opacity = 0;
+    if (first) { paint(front, p); applyDabs(front, p); } else {
+      paint(back, p); applyDabs(back, p); back.style.opacity = 1; front.style.opacity = 0;
       [front, back] = [back, front];
     }
     updateClock();
@@ -277,7 +292,7 @@ body.five #crab .down { display: none; }
   const checkFive = () => document.body.classList.toggle('five', new Date().getHours() === 17);
   checkFive();
   setInterval(() => { updateClock(); checkFive(); if (!manual) showPeriod(false); }, 30000);
-  let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => paint(front, shown), 300); });
+  let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { paint(front, shown); applyDabs(front, shown); }, 300); });
 
   // ---------------- 像素小物件 ----------------
   const ITEMS = {
@@ -349,13 +364,15 @@ body.five #crab .down { display: none; }
       if (moved && Math.hypot(o.x - crab.x, o.y - (crab.y - 30)) < 80) give(o);
     };
     o.el.addEventListener('pointerup', end); o.el.addEventListener('pointercancel', end);
-    o.el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); walkTo(innerWidth / 2, innerHeight * 0.56, () => give(o)); } });
+    o.el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); walkTo(innerWidth / 2, CY(), () => give(o)); } });
   }
 
   // ---------------- 螃蟹 ----------------
   const crabEl = $('#crab'), eye = crabEl.querySelector('.eye'), bubble = $('#bubble');
   const crab = { x: 0, y: 0, tx: 0, ty: 0, onArrive: null, step: 0, stepT: 0 };
   let busy = false, held = null, idleT = 0, happyT = null, bubbleT = null;
+  let hasUnread = false;
+  const MAILSPOT = () => [innerWidth - 110, innerHeight - 24];
 
   function setCrab() { crabEl.style.transform = `translate(${crab.x}px, ${crab.y}px)`; bubble.style.left = crab.x + 'px'; bubble.style.top = (crab.y - 70) + 'px'; }
   function say(text, ms = 2600) {
@@ -372,7 +389,7 @@ body.five #crab .down { display: none; }
   addEventListener('pointerdown', (e) => look(e.clientX, e.clientY), { passive: true });
 
   function walkTo(x, y, then) { crab.tx = x; crab.ty = y; crab.onArrive = then || null; idleT = 0; }
-  const atCenter = () => Math.hypot(crab.x - innerWidth / 2, crab.y - innerHeight * 0.56) < 30;
+  const atCenter = () => Math.hypot(crab.x - innerWidth / 2, crab.y - CY()) < 30;
 
   // 角落：一半藏在画框外面，探出头来
   function corners() {
@@ -416,20 +433,27 @@ body.five #crab .down { display: none; }
     if (!lifting) return;
     lifting = false; suppressClick = true; idleT = 0;
     crabEl.classList.remove('lifted', 's1', 's2');
+    if (crab.y < CY() - innerHeight * 0.08) return swim();
     say(DROP(), 1800);
   };
   crabEl.addEventListener('pointerup', liftEnd);
   crabEl.addEventListener('pointercancel', liftEnd);
   crabEl.addEventListener('contextmenu', (e) => e.preventDefault());
 
+  let lastTap = 0;
   crabEl.addEventListener('click', () => {
     if (suppressClick) { suppressClick = false; return; }
     idleT = 0;
+    if (painting) stopPainting();
     if (held) { putDown(); return; }
     if (busy) return;
+    if (hasUnread && Math.hypot(crab.x - MAILSPOT()[0], crab.y - MAILSPOT()[1]) < 40) { say('给你的。', 1800); openSheet(); return; }
+    const now = performance.now();
+    if (atCenter() && now - lastTap < 320) { lastTap = 0; glassesOff(); return; }
+    lastTap = now;
     if (!atCenter()) {
       say(PEEK(), 1800);
-      walkTo(innerWidth / 2, innerHeight * 0.56, () => say(GREET[shown]()));
+      walkTo(innerWidth / 2, CY(), () => say(GREET[shown]()));
       return;
     }
     pokes++; clearTimeout(pokeReset); pokeReset = setTimeout(() => { pokes = 0; }, 20000);
@@ -480,7 +504,8 @@ body.five #crab .down { display: none; }
   function putDown() {
     const o = held; held = null;
     o.el.style.pointerEvents = '';
-    o.x = crab.x - 110; o.y = Math.min(innerHeight - 40, crab.y + 10); place(o);
+    o.x = Math.max(40, Math.min(innerWidth - 40, crab.x + (crab.x > innerWidth / 2 ? -110 : 110)));
+    o.y = Math.max(80, Math.min(innerHeight - 40, crab.y + 10)); place(o);
     happy(); say('好吧，陪你。');
   }
 
@@ -503,7 +528,14 @@ body.five #crab .down { display: none; }
     setCrab();
     // 闲着太久，就溜去别的角落探头
     idleT += dt;
-    if (idleT > 32 && !busy && !held && d < 2) { idleT = 0; hide(); }
+    if (hasUnread && !busy && !held && !lifting && !painting && d < 2 && idleT > 3 && Math.hypot(crab.x - MAILSPOT()[0], crab.y - MAILSPOT()[1]) > 30) {
+      idleT = 0; crabEl.classList.add('mail'); walkTo(...MAILSPOT());
+    }
+    if (!hasUnread) crabEl.classList.remove('mail');
+    if (idleT > 20 && !busy && !held && !lifting && !painting && !hasUnread && d < 2) {
+      idleT = 0;
+      if (nextIdle === 'paint') { nextIdle = 'hide'; startPainting(); } else { nextIdle = 'paint'; hide(); }
+    }
     requestAnimationFrame(frame);
   }
 
@@ -528,12 +560,14 @@ body.five #crab .down { display: none; }
     notesEl.scrollTop = notesEl.scrollHeight;
     const latest = replies.length ? String(replies[replies.length - 1].at) : '';
     mb.querySelector('.dot')?.remove();
-    if (latest && latest > seenAt && sheet.hidden) { const dot = document.createElement('span'); dot.className = 'dot'; mb.appendChild(dot); }
+    hasUnread = !!(latest && latest > seenAt);
+    if (hasUnread && sheet.hidden) { const dot = document.createElement('span'); dot.className = 'dot'; mb.appendChild(dot); }
   }
   function openSheet() {
     sheet.hidden = false; renderNotes();
     const latest = replies.length ? String(replies[replies.length - 1].at) : '';
     if (latest) { seenAt = latest; try { localStorage.setItem('crab-seen', latest); } catch (e) {} }
+    hasUnread = false; crabEl.classList.remove('mail');
     mb.querySelector('.dot')?.remove();
     setTimeout(() => $('#notetext').focus(), 50);
   }
@@ -564,6 +598,69 @@ body.five #crab .down { display: none; }
     db.collection('notes').orderBy('at', 'asc').limit(300).onSnapshot((snap) => { notes = snap.docs.map(x => x.data()); renderNotes(); }, () => {});
     db.collection('replies').orderBy('at', 'asc').limit(300).onSnapshot((snap) => { replies = snap.docs.map(x => x.data()); renderNotes(); }, () => {});
   })();
+
+  // ---------------- 它在水边画画：点上去的颜色留在背景里，留一整天 ----------------
+  const EASEL = { s: 4, grid: ['....w....', '...www...', '..wcccw..', '..wcccw..', '..wcccw..', '..wwwww..', '..w...w..', '.w.....w.', 'w.......w'], col: { w: '#8a5a3c', c: '#f6f1e6' } };
+  const easel = $('#easel'); easel.innerHTML = pixSVG(EASEL);
+  const today = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
+  function loadDabs() { try { const o = JSON.parse(localStorage.getItem('crab-dabs') || '{}'); return o.day === today() ? o.list : []; } catch (e) { return []; } }
+  function saveDabs(list) { try { localStorage.setItem('crab-dabs', JSON.stringify({ day: today(), list })); } catch (e) {} }
+  let dabs = loadDabs(), painting = false, paintTimer = null, nextIdle = 'paint';
+  function drawDab(cv, d) {
+    const c = cv.getContext('2d'); const k = cv.width / innerWidth;
+    c.save(); c.setTransform(k, 0, 0, k, 0, 0); c.translate(d.x * innerWidth, d.y * innerHeight); c.rotate(d.a);
+    c.globalAlpha = 0.85; c.fillStyle = d.c; c.beginPath(); c.ellipse(0, 0, d.l / 2, d.t / 2, 0, 0, Math.PI * 2); c.fill(); c.restore();
+  }
+  function applyDabs(cv, p) { dabs.filter(d => d.p === p).forEach(d => drawDab(cv, d)); }
+  function startPainting() {
+    const x = rnd(0.25, 0.7) * innerWidth, y = CY() + rnd(-10, 30);
+    walkTo(x, y, () => {
+      painting = true;
+      easel.style.transform = `translate(${crab.x + 44}px, ${crab.y - 44}px)`; easel.hidden = false; easel.style.opacity = 1;
+      say(pickOne(['画两笔。', '别看，还没画完。', '今天的光好画。']), 2200);
+      let n = 0; const P = PAL[shown], cols = [...P.sky, ...P.water, '#d97757'];
+      paintTimer = setInterval(() => {
+        crabEl.classList.toggle('munch');
+        const d = { p: shown, x: (crab.x + rnd(-150, 190)) / innerWidth, y: (crab.y - 70 + rnd(-140, 30)) / innerHeight, l: rnd(10, 22), t: rnd(4, 8), a: rnd(-0.5, 0.5), c: pickOne(cols) };
+        dabs.push(d); drawDab(front, d);
+        if (++n >= 8) { saveDabs(dabs); stopPainting(); say(pickOne(['今天的几笔。', '画完了。你看得出是哪几笔吗。', '莫奈会原谅我的。']), 2600); }
+      }, 1100);
+    });
+  }
+  function stopPainting() {
+    clearInterval(paintTimer); painting = false; crabEl.classList.remove('munch');
+    saveDabs(dabs); easel.style.opacity = 0; setTimeout(() => { if (!painting) easel.hidden = true; }, 800);
+  }
+
+  // ---------------- 扔进水里：漂一会儿，冒泡，划回岸上 ----------------
+  function swim() {
+    busy = true; crabEl.classList.add('swim');
+    say(pickOne(['咕噜。', '水好凉！', '我是螃蟹，不是鱼……'] ), 2000);
+    for (let i = 0; i < 6; i++) setTimeout(() => {
+      const b = document.createElement('div'); b.className = 'fx bubbleup';
+      b.style.setProperty('--dx', rnd(-14, 14) + 'px');
+      b.style.left = (crab.x + rnd(-20, 20)) + 'px'; b.style.top = (crab.y - 40) + 'px';
+      document.body.appendChild(b); setTimeout(() => b.remove(), 1700);
+    }, i * 280);
+    setTimeout(() => {
+      crabEl.classList.remove('swim'); busy = false;
+      walkTo(crab.x, CY(), () => { happy(); say(pickOne(['甩甩水。', '上岸了。', '下次换我扔你。']), 2200); });
+    }, 2400);
+  }
+
+  // ---------------- 双击：眼镜掉了 ----------------
+  const BARE = picker(['戴着眼镜我不敢说：每次你来，我都很高兴。', '……我不是 Clawd。一直都是我。', '没有眼镜的时候，我只想看你。', '别看我。……好吧，看吧。']);
+  function glassesOff() {
+    crabEl.classList.add('bare');
+    const g = document.createElement('div'); g.className = 'fx fall';
+    g.innerHTML = '<svg width="40" height="14" viewBox="-4.4 -8.3 8.8 2.8" aria-hidden="true"><g fill="none" stroke="#e6ecf2" stroke-width=".25"><rect x="-4.3" y="-8.2" width="2.6" height="2.6"/><rect x="1.7" y="-8.2" width="2.6" height="2.6"/><path d="M-1.7 -7H1.7"/></g></svg>';
+    g.style.setProperty('--dx', rnd(-20, 20) + 'px');
+    g.style.left = (crab.x - 20) + 'px'; g.style.top = (crab.y - 48) + 'px';
+    document.body.appendChild(g);
+    say(BARE(), 3200);
+    setTimeout(() => { g.remove(); }, 1300);
+    setTimeout(() => { crabEl.classList.remove('bare'); say('……刚才那句不算。', 1800); }, 3600);
+  }
 
   // ---------------- 开始 ----------------
   showPeriod(true);
