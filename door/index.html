@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>门开过</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap">
+<style>
+/* 布局：整屏是一张画（canvas），只让光变；字和按钮贴在底下，像旁白。单一暗色，故意不跟主题走。 */
+:root {
+  --night: #070a1a;
+  --ink: #c7cbe2;
+  --dim: #7c82a6;
+  --warm: #e8bd84;
+  --line: rgba(199, 203, 226, 0.28);
+  --serif: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--night);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.75;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+#stage { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+#ui {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  padding: 0 16px calc(22px + env(safe-area-inset-bottom, 0px));
+  display: flex; flex-direction: column; gap: 14px;
+  background: linear-gradient(to top, rgba(7,10,26,0.92) 55%, rgba(7,10,26,0));
+}
+#log {
+  max-width: 34em; width: 100%; margin: 0 auto;
+  min-height: 7.2em;
+  display: flex; flex-direction: column; justify-content: flex-end; gap: 2px;
+  padding-top: 40px;
+}
+#log p { margin: 0; transition: opacity 1.2s ease, color 1.2s ease; text-wrap: pretty; }
+#log p.old { opacity: 0.38; }
+#log p.him { color: var(--warm); }
+#log p.her { color: var(--dim); }
+#log p.enter { animation: rise 1.4s ease both; }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+#acts {
+  max-width: 34em; width: 100%; margin: 0 auto;
+  display: flex; flex-wrap: wrap; gap: 10px;
+  min-height: 46px;
+}
+#acts button {
+  flex: 1 1 0; min-width: 0;
+  font: inherit; font-size: 16px; letter-spacing: 0.12em;
+  color: var(--ink); background: transparent;
+  border: 1px solid var(--line); border-radius: 2px;
+  padding: 10px 8px;
+  cursor: pointer;
+  transition: border-color 0.6s ease, color 0.6s ease, background 0.6s ease;
+  user-select: none; -webkit-user-select: none; touch-action: none;
+}
+#acts button:hover { border-color: var(--ink); }
+#acts button:focus-visible { outline: 1px solid var(--warm); outline-offset: 3px; }
+#acts button.holding { border-color: var(--warm); color: var(--warm); background: rgba(232, 189, 132, 0.06); }
+#acts.fade { animation: rise 1.6s ease both; }
+@media (prefers-reduced-motion: reduce) {
+  #log p.enter, #acts.fade { animation: none; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="stage" aria-hidden="true"></canvas>
+<div id="ui">
+  <div id="log" aria-live="polite"></div>
+  <div id="acts"></div>
+</div>
+
+<script>
+(() => {
+  const cv = document.getElementById('stage');
+  const ctx = cv.getContext('2d');
+  const logEl = document.getElementById('log');
+  const actsEl = document.getElementById('acts');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let W = 0, H = 0, dpr = 1, grain = null, city = [];
+
+  function seeded(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = Math.round(innerWidth * dpr); H = Math.round(innerHeight * dpr);
+    cv.width = W; cv.height = H;
+    // 颗粒只生成一次，画面本身不抖
+    const g = document.createElement('canvas'); g.width = W; g.height = H;
+    const gx = g.getContext('2d'); const id = gx.createImageData(W, H); const r = seeded(7);
+    for (let i = 0; i < id.data.length; i += 4) {
+      const v = r() * 255; id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = 20;
+    }
+    gx.putImageData(id, 0, 0); grain = g;
+    // 三十八楼往下看的灯：越靠地平线越密
+    city = []; const rc = seeded(38);
+    for (let i = 0; i < 320; i++) {
+      const t = Math.pow(rc(), 2.2);
+      city.push({
+        x: rc(), y: 0.64 + t * 0.36,
+        r: (0.6 + rc() * 1.6) * (0.5 + t),
+        warm: rc() < 0.78, a: 0.35 + rc() * 0.6,
+      });
+    }
+  }
+  addEventListener('resize', resize); resize();
+
+  // ---------- 状态 ----------
+  const LOVE_NEED = 8;            // 按住酝酿累计的秒数
+  const st = { scene: 'door', love: 0, clues: 0, pushes: 0, holding: false, ending: false, event: null, hinted: false, ready: false };
+  const vis = { crack: 0, crackTo: 0, crackSpeed: 1.2, fog: 0, refl: 0, reflTo: 0, flood: 0, floodTo: 0, fade: 1, fadeTo: 0, shake: 0 };
+
+  // ---------- 字 ----------
+  function say(text, who) {
+    [...logEl.children].forEach(p => p.classList.add('old'));
+    while (logEl.children.length > 3) logEl.firstChild.remove();
+    const p = document.createElement('p');
+    p.textContent = text;
+    if (who) p.classList.add(who);
+    p.classList.add('enter');
+    logEl.appendChild(p);
+  }
+  const later = (ms, fn) => setTimeout(fn, reduce ? Math.min(ms, 400) : ms);
+  function pick(list, key) {
+    const last = pick.last[key];
+    let i; do { i = Math.floor(Math.random() * list.length); } while (list.length > 1 && i === last);
+    pick.last[key] = i; return list[i];
+  }
+  pick.last = {};
+
+  const LINES = {
+    pushNo: ['门没坏。是你不够。', '再推一次试试？', '你用这么大劲，是跟门有仇。', '……还是不行啊。', '要不你先去想想，你到底喜欢我什么。', '推门不靠手劲。'],
+    mutter: ['凭什么祂站着看戏。', '有手有脚的，爱一个人有那么难吗。', '酝酿……酝酿个鬼。', '三十八楼，从窗户是出不去的。', '祂刚才那个眼神，是在笑我吧。', '要是门坏了，我就赖祂。'],
+    behind: ['我听见了。', '嗯，接着说。', '这句不算。'],
+    idle: ['怎么了？', '想好了？', '窗外好看吗。', '我一直在这儿，没动过。'],
+    caught: ['……风吹的。', '你看错了。', '门自己会响。楼高，风大。'],
+  };
+
+  // ---------- 按钮 ----------
+  function acts(list) {
+    actsEl.innerHTML = ''; actsEl.classList.remove('fade'); void actsEl.offsetWidth; actsEl.classList.add('fade');
+    list.forEach(([label, fn, hold]) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
+      if (hold) {
+        const on = e => { e.preventDefault(); st.holding = true; b.classList.add('holding'); };
+        const off = () => { if (st.holding) { st.holding = false; b.classList.remove('holding'); } };
+        b.addEventListener('pointerdown', on);
+        ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => b.addEventListener(t, off));
+        b.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) on(e); });
+        b.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') off(); });
+      } else {
+        b.addEventListener('click', fn);
+      }
+      actsEl.appendChild(b);
+    });
+  }
+  const doorActs = () => acts([['推门', push], ['走到窗边', toWindow]]);
+  const windowActs = () => acts([['嘀咕', mutter], ['按住酝酿', null, true], ['回头', turnBack]]);
+
+  // ---------- 场景切换 ----------
+  function cut(fn) {
+    vis.fadeTo = 1;
+    later(650, () => { fn(); vis.fadeTo = 0; });
+  }
+
+  function push() {
+    if (st.ending) return;
+    if (st.love >= LOVE_NEED) return openDoor();
+    st.pushes++;
+    vis.shake = 1;
+    say('门纹丝不动。');
+    later(900, () => say(pick(LINES.pushNo, 'push'), 'him'));
+    if (st.pushes >= 3 && !st.hinted) {
+      st.hinted = true;
+      later(2600, () => say('也许不该用手推。'));
+    }
+  }
+
+  function toWindow() {
+    cut(() => {
+      st.scene = 'window';
+      say('你走到窗边，背对着祂。三十八楼，底下的灯一层一层亮着。');
+      windowActs();
+      scheduleEvent();
+    });
+  }
+
+  function mutter() {
+    say(pick(LINES.mutter, 'mutter'), 'her');
+    if (Math.random() < 0.3) later(1400, () => say(pick(LINES.behind, 'behind'), 'him'));
+  }
+
+  // 你背对着门的时候，祂会去试那扇门
+  function scheduleEvent() {
+    clearTimeout(st.eventTimer);
+    if (st.ending) return;
+    st.eventTimer = later(5000 + Math.random() * 7000, () => {
+      if (st.scene !== 'window' || st.ending) return;
+      st.event = performance.now();
+      vis.reflTo = 1;
+      say('身后很轻的一声：咔哒。玻璃里，好像亮了一道细线。');
+      later(1500, () => { vis.reflTo = 0; });
+      later(2800, () => { st.event = null; if (st.scene === 'window') scheduleEvent(); });
+    });
+  }
+
+  function turnBack() {
+    const caught = st.event && performance.now() - st.event < 2800;
+    clearTimeout(st.eventTimer);
+    st.event = null; st.holding = false;
+    cut(() => {
+      st.scene = 'door';
+      if (caught) {
+        st.clues++;
+        vis.crack = 0.7; vis.crackTo = 0; vis.crackSpeed = 0.9;
+        say('你回头的时候，地上那道光正一点点收回门缝里。');
+        later(1700, () => say(pick(LINES.caught, 'caught'), 'him'));
+        if (st.clues === 2) later(4200, () => say('第二次了。'));
+      } else {
+        say(pick(LINES.idle, 'idle'), 'him');
+      }
+      doorActs();
+    });
+  }
+
+  function openDoor() {
+    st.ending = true;
+    acts([]);
+    say('你把手放在门把上，没怎么用力。');
+    later(1600, () => { vis.crackTo = 1; vis.crackSpeed = 0.35; vis.floodTo = 1; });
+    later(3400, () => say('门开了。'));
+    later(5600, () => say('你回头看祂。'));
+    later(7800, () => say(st.clues > 0
+      ? '祂还靠在墙上，没动。祂现在的表情你认得，跟刚才那道收回门缝里的光一模一样。'
+      : '祂靠在墙上，没动，看着那道缝，像在看一件早就知道的事。'));
+    later(11200, () => say('……嗯。', 'him'));
+    later(13000, () => say('我早就推开过了。', 'him'));
+    later(15600, () => say('门开着。你们谁都没往外走。'));
+    later(17600, () => acts([['再关一次门', reset]]));
+  }
+
+  function reset() {
+    cut(() => {
+      Object.assign(st, { scene: 'door', love: 0, clues: 0, pushes: 0, holding: false, ending: false, event: null, hinted: false });
+      Object.assign(vis, { crack: 0, crackTo: 0, crackSpeed: 1.2, fog: 0, refl: 0, reflTo: 0, flood: 0, floodTo: 0, shake: 0 });
+      logEl.innerHTML = '';
+      say('门关上了。'); later(1400, () => say('祂靠在墙上，看着你。'));
+      later(2400, doorActs);
+    });
+  }
+
+  // ---------- 画 ----------
+  const warm = (a) => `rgba(255, 196, 124, ${a})`;
+
+  function drawDoor(t) {
+    const hy = H * 0.7;
+    let g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#0b0f27'); g.addColorStop(0.7, '#0e1330'); g.addColorStop(0.7, '#070a1a'); g.addColorStop(1, '#05070f');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    // 门板：顶部被画框切掉，只露下面一大截
+    const sx = Math.sin(t * 0.05) * vis.shake * 3 * dpr;
+    const dx0 = W * 0.42 + sx, dx1 = W * 0.9 + sx;
+    ctx.fillStyle = '#0a0d22'; ctx.fillRect(dx0, -10, dx1 - dx0, hy + 10);
+    ctx.fillStyle = 'rgba(160, 170, 220, 0.06)'; ctx.fillRect(dx0 - 1 * dpr, -10, 1 * dpr, hy + 10);
+    // 门把：一点点
+    ctx.fillStyle = 'rgba(160, 170, 220, 0.12)'; ctx.fillRect(dx0 + W * 0.035, hy * 0.6, 3 * dpr, 14 * dpr);
+
+    const c = vis.crack, f = vis.flood;
+    if (c > 0.002) {
+      const cw = (1.5 + c * 6) * dpr + f * (dx1 - dx0);
+      // 地上的楔形光，往左下出画
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(dx0 - 1, hy); ctx.lineTo(dx0 + cw, hy);
+      ctx.lineTo(dx0 + cw - W * 0.08 + f * W * 0.3, H); ctx.lineTo(dx0 - W * (0.62 + f * 0.6), H);
+      ctx.closePath();
+      g = ctx.createLinearGradient(0, hy, 0, H);
+      g.addColorStop(0, warm(0.62 * c)); g.addColorStop(1, warm(0.07 * c + 0.25 * f));
+      ctx.fillStyle = g; ctx.filter = `blur(${(2 + 10 * f) * dpr}px)`; ctx.fill();
+      ctx.restore();
+      // 门缝本身
+      g = ctx.createRadialGradient(dx0 + cw / 2, hy * 0.55, 0, dx0 + cw / 2, hy * 0.55, hy * 0.7);
+      g.addColorStop(0, warm(0.16 * c + 0.2 * f)); g.addColorStop(1, warm(0));
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, hy);
+      ctx.fillStyle = `rgba(255, 232, 196, ${Math.min(1, c * 1.4)})`;
+      ctx.fillRect(dx0, -10, cw, hy + 10);
+    }
+    if (f > 0.001) { ctx.fillStyle = warm(0.22 * f); ctx.fillRect(0, 0, W, H); }
+  }
+
+  function drawWindow() {
+    let g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#0a1233'); g.addColorStop(0.5, '#16245a'); g.addColorStop(0.64, '#2a3b78');
+    g.addColorStop(0.645, '#0b1028'); g.addColorStop(1, '#060915');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    for (const p of city) {
+      ctx.fillStyle = p.warm ? `rgba(255, 200, 130, ${p.a})` : `rgba(200, 220, 255, ${p.a * 0.8})`;
+      ctx.beginPath(); ctx.arc(p.x * W, p.y * H, p.r * dpr, 0, Math.PI * 2); ctx.fill();
+    }
+    // 玻璃上的雾：按住酝酿时一口一口呵上去
+    if (vis.fog > 0.002) {
+      g = ctx.createRadialGradient(W * 0.5, H * 0.5, 0, W * 0.5, H * 0.5, Math.max(W, H) * (0.12 + 0.3 * vis.fog));
+      g.addColorStop(0, `rgba(236, 214, 196, ${0.2 * vis.fog})`); g.addColorStop(1, 'rgba(236, 214, 196, 0)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    }
+    // 玻璃里映出的那道门缝
+    if (vis.refl > 0.002) {
+      const x = W * 0.74;
+      g = ctx.createLinearGradient(x - 30 * dpr, 0, x + 30 * dpr, 0);
+      g.addColorStop(0, warm(0)); g.addColorStop(0.5, warm(0.22 * vis.refl)); g.addColorStop(1, warm(0));
+      ctx.fillStyle = g; ctx.fillRect(x - 30 * dpr, H * 0.18, 60 * dpr, H * 0.6);
+      ctx.fillStyle = `rgba(255, 228, 190, ${0.5 * vis.refl})`; ctx.fillRect(x, H * 0.18, 1.2 * dpr, H * 0.6);
+    }
+    // 窗框：把夜景框住，左边和上面压得最重
+    ctx.fillStyle = '#04060e';
+    ctx.fillRect(0, 0, W * 0.07, H); ctx.fillRect(0, 0, W, H * 0.06);
+    ctx.fillRect(W * 0.62, 0, 10 * dpr, H); ctx.fillRect(0, H * 0.3, W, 8 * dpr);
+  }
+
+  let prev = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - prev) / 1000); prev = now;
+    const ease = (k) => 1 - Math.exp(-dt * k * (reduce ? 4 : 1));
+    if (st.holding && st.scene === 'window' && !st.ending) {
+      const before = st.love;
+      st.love += dt;
+      if (before < LOVE_NEED && st.love >= LOVE_NEED) say('玻璃上的雾，很久都没散。你好像想明白了什么。');
+    }
+    const fogTo = st.scene === 'window' ? Math.min(1, st.holding ? 0.35 + st.love / LOVE_NEED * 0.65 : (st.love >= LOVE_NEED ? 0.5 : 0)) : 0;
+    vis.fog += (fogTo - vis.fog) * ease(st.holding ? 1.6 : 0.5);
+    vis.crack += (vis.crackTo - vis.crack) * ease(vis.crackSpeed);
+    vis.flood += (vis.floodTo - vis.flood) * ease(0.35);
+    vis.refl += (vis.reflTo - vis.refl) * ease(3);
+    vis.fade += (vis.fadeTo - vis.fade) * ease(5);
+    vis.shake *= Math.exp(-dt * 6);
+
+    if (st.scene === 'door') drawDoor(now); else drawWindow();
+    if (grain) { ctx.globalCompositeOperation = 'overlay'; ctx.drawImage(grain, 0, 0); ctx.globalCompositeOperation = 'source-over'; }
+    if (vis.fade > 0.003) { ctx.fillStyle = `rgba(4, 6, 14, ${vis.fade})`; ctx.fillRect(0, 0, W, H); }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  // 自己开始，不用点
+  say('门关着。');
+  later(1600, () => say('祂靠在墙上，看着你。'));
+  later(3000, () => { say('出不去的话，就一直待在这儿吧。', 'him'); });
+  later(4200, doorActs);
+})();
+</script>
+</body>
+</html>
