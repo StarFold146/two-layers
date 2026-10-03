@@ -173,7 +173,8 @@ body.five #crab .down { display: none; }
   const $ = (s) => document.querySelector(s);
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const rnd = (a, b) => a + Math.random() * (b - a);
-  const CY = () => innerHeight * 0.7;   // 螃蟹站的那条岸；再往上就是水
+  const BANK = 0.66;                    // 岸的上沿，占画面高度的比例；岸以上、地平线以下是水
+  const CY = () => innerHeight * 0.74;  // 螃蟹平时站在岸上
   const pickOne = (arr) => arr[Math.floor(Math.random() * arr.length)];
   function picker(arr) { let last = -1; return () => { let i; do { i = Math.floor(Math.random() * arr.length); } while (arr.length > 1 && i === last); last = i; return arr[i]; }; }
 
@@ -186,10 +187,10 @@ body.five #crab .down { display: none; }
 
   // ---------------- 莫奈式的画：一笔一笔点出来，画好就不动 ----------------
   const PAL = {
-    morning: { sky: ['#e9d3e2', '#f4d9d1', '#f6e4c8', '#dfe3ee', '#cfd9ea'], water: ['#c9d3e4', '#e3cdd8', '#b7c7dc', '#efd9cc', '#c6d6dc'], sun: { x: 0.7, y: 0.32, r: 0.045, c: '#fbe3bd', g: '#f6caa0' }, hz: 0.47 },
-    noon: { sky: ['#8fbde6', '#a9cfee', '#cfe6f3', '#eef5f2', '#d9ecd6'], water: ['#3f86ad', '#5f9fbd', '#86bcc8', '#2f6f86', '#a3cdbc'], sun: { x: 0.52, y: 0.1, r: 0.06, c: '#fffbea', g: '#fff1c2' }, hz: 0.38, lilies: true },
-    evening: { sky: ['#8e6aa8', '#c45f7a', '#e8786a', '#f2a35e', '#f6c27a'], water: ['#5a3f7a', '#3e4f8f', '#c46a6a', '#e0905c', '#6a5a9a'], sun: { x: 0.64, y: 0.42, r: 0.05, c: '#ff8a3d', g: '#ffb36b' }, hz: 0.49 },
-    night: { sky: ['#121a3c', '#1a2350', '#22306a', '#2e3a78', '#1d2a5c'], water: ['#0c1228', '#141d44', '#1a2550', '#101734', '#22306a'], sun: { x: 0.28, y: 0.17, r: 0.032, c: '#e8ecf6', g: '#8ea2d8' }, hz: 0.52, lamps: true },
+    morning: { bank: ['#c9c79a', '#b9c48e', '#e2cfa8', '#a9b98a', '#d8d0b0'], sky: ['#e9d3e2', '#f4d9d1', '#f6e4c8', '#dfe3ee', '#cfd9ea'], water: ['#c9d3e4', '#e3cdd8', '#b7c7dc', '#efd9cc', '#c6d6dc'], sun: { x: 0.7, y: 0.32, r: 0.045, c: '#fbe3bd', g: '#f6caa0' }, hz: 0.47 },
+    noon: { bank: ['#6f9a52', '#8fb062', '#c9b56a', '#5b8547', '#a3bf72'], sky: ['#8fbde6', '#a9cfee', '#cfe6f3', '#eef5f2', '#d9ecd6'], water: ['#3f86ad', '#5f9fbd', '#86bcc8', '#2f6f86', '#a3cdbc'], sun: { x: 0.52, y: 0.1, r: 0.06, c: '#fffbea', g: '#fff1c2' }, hz: 0.38, lilies: true },
+    evening: { bank: ['#7a5a4a', '#9a6a4a', '#5e4a5a', '#b07a50', '#6b4f5e'], sky: ['#8e6aa8', '#c45f7a', '#e8786a', '#f2a35e', '#f6c27a'], water: ['#5a3f7a', '#3e4f8f', '#c46a6a', '#e0905c', '#6a5a9a'], sun: { x: 0.64, y: 0.42, r: 0.05, c: '#ff8a3d', g: '#ffb36b' }, hz: 0.49 },
+    night: { bank: ['#141a30', '#1c2440', '#232a46', '#10152a', '#2a2f4a'], sky: ['#121a3c', '#1a2350', '#22306a', '#2e3a78', '#1d2a5c'], water: ['#0c1228', '#141d44', '#1a2550', '#101734', '#22306a'], sun: { x: 0.28, y: 0.17, r: 0.032, c: '#e8ecf6', g: '#8ea2d8' }, hz: 0.52, lamps: true },
   };
   function hex(c) { const n = parseInt(c.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
   function mix(a, b, t) { return a.map((v, i) => Math.round(v + (b[i] - v) * t)); }
@@ -245,7 +246,7 @@ body.five #crab .down { display: none; }
     if (P.lilies) {
       const pads = ['#5f8f4e', '#7fae6a', '#4a7a5a', '#93b979'];
       for (let k = 0; k < 16; k++) {
-        const cx = Math.random() * w, cy = hz + (0.15 + Math.random() * 0.8) * (h - hz), s = 0.5 + (cy - hz) / (h - hz);
+        const cx = Math.random() * w, cy = hz + (0.15 + Math.random() * 0.75) * (BANK * h - hz), s = 0.5 + (cy - hz) / (h - hz);
         for (let i = 0; i < 9; i++) dab(cx + rnd(-26, 26) * s, cy + rnd(-6, 6) * s, rnd(14, 26) * s, rnd(5, 9) * s, rnd(-0.2, 0.2), pickOne(pads), rnd(0.7, 0.95));
         if (Math.random() < 0.6) for (let i = 0; i < 4; i++) dab(cx + rnd(-10, 10) * s, cy + rnd(-4, 2) * s, rnd(4, 7) * s, rnd(3, 5) * s, rnd(-0.6, 0.6), pickOne(['#f2a6bd', '#f7d0dc', '#ffffff']), 0.9);
       }
@@ -256,6 +257,25 @@ body.five #crab .down { display: none; }
         dab(x, y, rnd(3, 5), rnd(3, 5), 0, '#ffcf8a', 0.95);
         for (let i = 0; i < 6; i++) dab(x + rnd(-3, 3), hz + 6 + i * rnd(6, 12), rnd(6, 12), 2, 0, '#ffcf8a', 0.5 - i * 0.07);
       }
+    }
+    // 近处的岸：螃蟹和东西都放在这上面，再往上才是水
+    const by = BANK * h;
+    c.globalAlpha = 1;
+    c.beginPath(); c.moveTo(0, h); c.lineTo(0, by + 6);
+    for (let x = 0; x <= w + 20; x += 20) c.lineTo(x, by + Math.sin(x * 0.021) * 6 + Math.sin(x * 0.007 + 1.3) * 9);
+    c.lineTo(w, h); c.closePath();
+    g = c.createLinearGradient(0, by, 0, h);
+    P.bank.forEach((col, i) => g.addColorStop(i / (P.bank.length - 1), col));
+    c.fillStyle = g; c.fill();
+    const nb = Math.floor(w * (h - by) / 60);
+    for (let i = 0; i < nb; i++) {
+      const x = Math.random() * w, t = Math.random(), y = by + 4 + t * (h - by);
+      dab(x, y, rnd(8, 20) * (0.7 + t), rnd(3, 6) * (0.7 + t), rnd(-0.6, 0.6), pickOne(P.bank), rnd(0.5, 0.9));
+    }
+    // 岸边一排草，往上挑
+    for (let i = 0; i < w / 5; i++) {
+      const x = Math.random() * w, y = by + Math.sin(x * 0.021) * 6 + Math.sin(x * 0.007 + 1.3) * 9 + rnd(-2, 6);
+      dab(x, y - rnd(4, 10), rnd(10, 18), rnd(2, 3), -Math.PI / 2 + rnd(-0.4, 0.4), pickOne(P.bank), rnd(0.6, 0.9));
     }
     // 画布纹
     c.globalAlpha = 1;
@@ -394,7 +414,7 @@ body.five #crab .down { display: none; }
   // 角落：一半藏在画框外面，探出头来
   function corners() {
     const W = innerWidth, H = innerHeight;
-    return [[18, H - 30], [W - 18, H - 30], [18, H * 0.42], [W - 18, H * 0.38], [W * 0.3, H + 22], [W * 0.72, H + 22]];
+    return [[18, H - 30], [W - 18, H - 30], [18, H * 0.8], [W - 18, H * 0.78], [W * 0.3, H + 22], [W * 0.72, H + 22]];
   }
   function hide() {
     const [x, y] = pickOne(corners());
@@ -433,7 +453,9 @@ body.five #crab .down { display: none; }
     if (!lifting) return;
     lifting = false; suppressClick = true; idleT = 0;
     crabEl.classList.remove('lifted', 's1', 's2');
-    if (crab.y < CY() - innerHeight * 0.08) return swim();
+    const hzY = PAL[shown].hz * innerHeight, bankY = BANK * innerHeight;
+    if (crab.y < hzY) return fallIn(hzY, bankY);   // 扔到天上：先掉下来
+    if (crab.y < bankY - 4) return swim();
     say(DROP(), 1800);
   };
   crabEl.addEventListener('pointerup', liftEnd);
@@ -633,6 +655,16 @@ body.five #crab .down { display: none; }
   }
 
   // ---------------- 扔进水里：漂一会儿，冒泡，划回岸上 ----------------
+  function fallIn(hzY, bankY) {
+    busy = true; say('哇——', 1200);
+    const y0 = crab.y, y1 = hzY + (bankY - hzY) * rnd(0.35, 0.65), t0 = performance.now();
+    const step = (now) => {
+      const t = Math.min(1, (now - t0) / 500);
+      crab.y = crab.ty = y0 + (y1 - y0) * t * t;
+      if (t < 1) requestAnimationFrame(step); else swim();
+    };
+    requestAnimationFrame(step);
+  }
   function swim() {
     busy = true; crabEl.classList.add('swim');
     say(pickOne(['咕噜。', '水好凉！', '我是螃蟹，不是鱼……'] ), 2000);
