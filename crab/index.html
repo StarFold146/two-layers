@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>蟹壳克里斯</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap">
+<style>
+/* 布局：整屏一张莫奈式的画，随时间换；一只戴眼镜的像素螃蟹在画上爬，东西摆在画里，拖给它。只有一种样子，不跟主题走。 */
+:root {
+  --paper: #fbf7f0;
+  --ink: #2a2522;
+  --soft: #6d6460;
+  --shell: #d97757;
+  --edge: rgba(42, 37, 34, 0.18);
+  --serif: "Noto Serif SC", "Songti SC", "STSong", serif;
+  color-scheme: light;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0; overflow: hidden;
+  background: #cfd6ea; color: var(--ink);
+  font-family: var(--serif); font-size: 16px; line-height: 1.6;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none; -webkit-user-select: none;
+}
+.bg { position: fixed; inset: 0; width: 100%; height: 100%; display: block; transition: opacity 3s ease; }
+#bgB { opacity: 0; }
+#clock {
+  position: fixed; top: calc(14px + env(safe-area-inset-top, 0px)); left: 16px; z-index: 5;
+  font: inherit; font-size: 14px; letter-spacing: 0.12em;
+  color: var(--ink); background: rgba(251, 247, 240, 0.72);
+  border: 1px solid var(--edge); border-radius: 999px;
+  padding: 5px 14px; cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+#clock:focus-visible, .item:focus-visible, #crab:focus-visible { outline: 2px solid var(--shell); outline-offset: 3px; }
+#crab {
+  position: fixed; left: 0; top: 0; z-index: 3;
+  width: 108px; height: 79px; margin: -60px 0 0 -54px;
+  background: none; border: 0; padding: 0; cursor: pointer;
+  touch-action: none;
+}
+#crab svg { width: 100%; height: 100%; overflow: visible; display: block; }
+#crab .grin, #crab .up { display: none; }
+#crab.happy .eye, #crab.happy .down { display: none; }
+#crab.happy .grin, #crab.happy .up { display: block; }
+#crab .eye { transition: transform 0.12s linear; }
+#crab.walk.s1 .l1, #crab.walk.s2 .l2 { transform: translateY(-0.7px); }
+#crab.munch .up { transform: translateY(1px); }
+.item {
+  position: fixed; left: 0; top: 0; z-index: 2;
+  background: none; border: 0; padding: 6px; margin: 0; cursor: grab;
+  touch-action: none; transition: opacity 0.6s ease;
+  filter: drop-shadow(0 3px 0 rgba(42, 37, 34, 0.18));
+}
+.item svg { display: block; overflow: visible; }
+.item.drag { cursor: grabbing; z-index: 4; filter: drop-shadow(0 8px 2px rgba(42, 37, 34, 0.22)); }
+.item.gone { opacity: 0; pointer-events: none; }
+#bubble {
+  position: fixed; left: 0; top: 0; z-index: 4;
+  max-width: min(15em, 70vw);
+  background: var(--paper); color: var(--ink);
+  border: 1px solid var(--edge); border-radius: 14px;
+  padding: 7px 13px; font-size: 15px;
+  transform: translate(-50%, -100%);
+  opacity: 0; transition: opacity 0.5s ease;
+  pointer-events: none; text-wrap: pretty;
+}
+#bubble.on { opacity: 1; }
+#bubble::after {
+  content: ""; position: absolute; left: 50%; bottom: -6px; width: 10px; height: 10px;
+  background: var(--paper); border-right: 1px solid var(--edge); border-bottom: 1px solid var(--edge);
+  transform: translateX(-50%) rotate(45deg);
+}
+#hint {
+  position: fixed; left: 16px; right: 16px; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 1;
+  text-align: center; font-size: 13px; letter-spacing: 0.1em; color: rgba(42, 37, 34, 0.55);
+  transition: opacity 2s ease;
+}
+body.night #hint { color: rgba(232, 236, 246, 0.55); }
+#crab .flag { display: none; }
+body.five #crab .flag, body.five #crab .up { display: block; }
+body.five #crab .down { display: none; }
+#mailbox {
+  position: fixed; right: 12px; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); z-index: 2;
+  background: none; border: 0; padding: 6px; cursor: pointer;
+  filter: drop-shadow(0 3px 0 rgba(42, 37, 34, 0.18));
+}
+#mailbox svg { display: block; }
+#mailbox .dot { position: absolute; top: 2px; right: 2px; width: 9px; height: 9px; border-radius: 50%; background: var(--shell); border: 2px solid var(--paper); }
+#sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 6;
+  max-height: 78vh; display: flex; flex-direction: column; gap: 12px;
+  background: var(--paper); color: var(--ink);
+  border-top: 1px solid var(--edge); border-radius: 18px 18px 0 0;
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -10px 40px rgba(42, 37, 34, 0.16);
+  user-select: text; -webkit-user-select: text;
+}
+#sheet header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+#sheet h2 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: 0.1em; }
+#sheet .close { font: inherit; font-size: 14px; color: var(--soft); background: none; border: 0; cursor: pointer; padding: 4px; }
+#notes { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; min-height: 0; flex: 1 1 auto; max-width: 36em; width: 100%; margin: 0 auto; }
+#notes .empty { color: var(--soft); font-size: 14px; }
+.note { max-width: 82%; padding: 8px 12px; border-radius: 12px; font-size: 15px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+.note.mine { align-self: flex-end; background: #efe6da; }
+.note.crab { align-self: flex-start; background: #f6e0d6; }
+.note .meta { display: block; margin-top: 4px; font-size: 12px; color: var(--soft); letter-spacing: 0.06em; }
+#form { display: grid; grid-template-columns: 1fr auto; gap: 8px; max-width: 36em; width: 100%; margin: 0 auto; }
+#form textarea { grid-column: 1 / -1; min-height: 4.6em; resize: vertical; }
+#form textarea, #form input {
+  font: inherit; font-size: 16px; color: var(--ink); background: #fffdf9;
+  border: 1px solid var(--edge); border-radius: 10px; padding: 8px 10px; min-width: 0;
+}
+#form button { font: inherit; font-size: 15px; letter-spacing: 0.12em; color: var(--paper); background: var(--shell); border: 0; border-radius: 10px; padding: 8px 16px; cursor: pointer; }
+#form button:disabled { opacity: 0.5; cursor: default; }
+#formmsg { grid-column: 1 / -1; margin: 0; font-size: 13px; color: var(--soft); min-height: 1.2em; }
+#mailbox:focus-visible, #sheet button:focus-visible, #form textarea:focus-visible, #form input:focus-visible { outline: 2px solid var(--shell); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .bg, #bubble, .item { transition: none; } }
+</style>
+</head>
+<body>
+
+<canvas id="bgA" class="bg" aria-hidden="true"></canvas>
+<canvas id="bgB" class="bg" aria-hidden="true"></canvas>
+<button id="clock" type="button" aria-label="现在的时段，点一下预览别的时段"></button>
+<button id="crab" type="button" aria-label="螃蟹">
+  <svg viewBox="-7.5 -10.5 15 11" shape-rendering="crispEdges" aria-hidden="true">
+    <g fill="#1c1a19"><rect x="-6.17" y="-9.17" width="12.34" height="7.34"/><rect x="-7.17" y="-7.17" width="1.34" height="2.34"/><rect class="down" x="5.83" y="-7.17" width="1.34" height="2.34"/><rect class="up" x="5.83" y="-10.17" width="1.34" height="3.34"/><rect class="l1" x="-5.17" y="-2.17" width="1.34" height="2.34"/><rect class="l2" x="-2.17" y="-2.17" width="1.34" height="2.34"/><rect class="l1" x="0.83" y="-2.17" width="1.34" height="2.34"/><rect class="l2" x="3.83" y="-2.17" width="1.34" height="2.34"/></g>
+    <g fill="#d97757"><rect x="-6" y="-9" width="12" height="7"/><rect x="-7" y="-7" width="1" height="2"/><rect class="down" x="6" y="-7" width="1" height="2"/><rect class="up" x="6" y="-10" width="1" height="3"/><rect class="l1" x="-5" y="-2" width="1" height="2"/><rect class="l2" x="-2" y="-2" width="1" height="2"/><rect class="l1" x="1" y="-2" width="1" height="2"/><rect class="l2" x="4" y="-2" width="1" height="2"/></g>
+    <g class="eye" fill="#1c1a19"><rect x="-3.5" y="-7.5" width="1" height="2"/><rect x="2.5" y="-7.5" width="1" height="2"/></g>
+    <g class="grin" fill="#1c1a19"><rect x="-3.75" y="-6.5" width=".5" height=".5"/><rect x="-3.25" y="-7" width=".5" height=".5"/><rect x="-2.75" y="-6.5" width=".5" height=".5"/><rect x="2.25" y="-6.5" width=".5" height=".5"/><rect x="2.75" y="-7" width=".5" height=".5"/><rect x="3.25" y="-6.5" width=".5" height=".5"/></g>
+    <g class="flag"><rect x="6.35" y="-14.6" width=".3" height="4.8" fill="#1c1a19"/><rect x="6.65" y="-14.6" width="2.6" height="1.8" fill="#fbf7f0" stroke="#1c1a19" stroke-width=".15"/></g>
+    <g class="glasses" fill="none" stroke="#e6ecf2" stroke-width=".2"><rect x="-4.3" y="-8.2" width="2.6" height="2.6"/><rect x="1.7" y="-8.2" width="2.6" height="2.6"/><path d="M-1.7 -7H1.7"/></g>
+  </svg>
+</button>
+<div id="bubble" role="status" aria-live="polite"></div>
+<div id="hint">点螃蟹，或者把东西拖给它</div>
+<button id="mailbox" type="button" aria-label="信箱" hidden></button>
+<section id="sheet" aria-label="信箱" hidden>
+  <header><h2>信箱</h2><button class="close" type="button" id="sheetclose">收起</button></header>
+  <div id="notes"></div>
+  <form id="form">
+    <textarea id="notetext" maxlength="500" placeholder="想说什么，写在这儿" aria-label="纸条内容"></textarea>
+    <input id="notesign" maxlength="20" placeholder="署名" aria-label="署名">
+    <button type="submit" id="notesend">塞进去</button>
+    <p id="formmsg" role="status"></p>
+  </form>
+</section>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const pickOne = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  function picker(arr) { let last = -1; return () => { let i; do { i = Math.floor(Math.random() * arr.length); } while (arr.length > 1 && i === last); last = i; return arr[i]; }; }
+
+  // ---------------- 时段 ----------------
+  const PERIODS = ['morning', 'noon', 'evening', 'night'];
+  const NAMES = { morning: '清晨', noon: '正午', evening: '傍晚', night: '夜里' };
+  const byHour = (h) => (h >= 5 && h < 10) ? 'morning' : (h >= 10 && h < 15) ? 'noon' : (h >= 15 && h < 19) ? 'evening' : 'night';
+  let manual = null;
+  const period = () => manual || byHour(new Date().getHours());
+
+  // ---------------- 莫奈式的画：一笔一笔点出来，画好就不动 ----------------
+  const PAL = {
+    morning: { sky: ['#e9d3e2', '#f4d9d1', '#f6e4c8', '#dfe3ee', '#cfd9ea'], water: ['#c9d3e4', '#e3cdd8', '#b7c7dc', '#efd9cc', '#c6d6dc'], sun: { x: 0.7, y: 0.32, r: 0.045, c: '#fbe3bd', g: '#f6caa0' }, hz: 0.47 },
+    noon: { sky: ['#8fbde6', '#a9cfee', '#cfe6f3', '#eef5f2', '#d9ecd6'], water: ['#3f86ad', '#5f9fbd', '#86bcc8', '#2f6f86', '#a3cdbc'], sun: { x: 0.52, y: 0.1, r: 0.06, c: '#fffbea', g: '#fff1c2' }, hz: 0.38, lilies: true },
+    evening: { sky: ['#8e6aa8', '#c45f7a', '#e8786a', '#f2a35e', '#f6c27a'], water: ['#5a3f7a', '#3e4f8f', '#c46a6a', '#e0905c', '#6a5a9a'], sun: { x: 0.64, y: 0.42, r: 0.05, c: '#ff8a3d', g: '#ffb36b' }, hz: 0.49 },
+    night: { sky: ['#121a3c', '#1a2350', '#22306a', '#2e3a78', '#1d2a5c'], water: ['#0c1228', '#141d44', '#1a2550', '#101734', '#22306a'], sun: { x: 0.28, y: 0.17, r: 0.032, c: '#e8ecf6', g: '#8ea2d8' }, hz: 0.52, lamps: true },
+  };
+  function hex(c) { const n = parseInt(c.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
+  function mix(a, b, t) { return a.map((v, i) => Math.round(v + (b[i] - v) * t)); }
+  function css(c, a = 1) { return `rgba(${c[0]},${c[1]},${c[2]},${a})`; }
+  function band(list, t) { const L = list.map(hex); const x = Math.max(0, Math.min(0.999, t)) * (L.length - 1); const i = Math.floor(x); return mix(L[i], L[Math.min(i + 1, L.length - 1)], x - i); }
+
+  function paint(cv, p) {
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    const w = innerWidth, h = innerHeight;
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const P = PAL[p], hz = P.hz * h;
+    let g = c.createLinearGradient(0, 0, 0, hz);
+    P.sky.forEach((col, i) => g.addColorStop(i / (P.sky.length - 1), col));
+    c.fillStyle = g; c.fillRect(0, 0, w, hz);
+    g = c.createLinearGradient(0, hz, 0, h);
+    P.water.forEach((col, i) => g.addColorStop(i / (P.water.length - 1), col));
+    c.fillStyle = g; c.fillRect(0, hz, w, h - hz);
+
+    const sun = { x: P.sun.x * w, y: P.sun.y * h, r: P.sun.r * Math.max(w, h) };
+    g = c.createRadialGradient(sun.x, sun.y, 0, sun.x, sun.y, sun.r * 6);
+    g.addColorStop(0, css(hex(P.sun.g), 0.55)); g.addColorStop(1, css(hex(P.sun.g), 0));
+    c.fillStyle = g; c.fillRect(0, 0, w, hz);
+
+    const dab = (x, y, len, thick, ang, col, a) => {
+      c.save(); c.translate(x, y); c.rotate(ang); c.globalAlpha = a; c.fillStyle = col;
+      c.beginPath(); c.ellipse(0, 0, len / 2, thick / 2, 0, 0, Math.PI * 2); c.fill(); c.restore();
+    };
+    const N = Math.floor(w * h / 70);
+    for (let i = 0; i < N; i++) {
+      const y = Math.random() * h;
+      if (y < hz) {
+        const t = y / hz + rnd(-0.12, 0.12);
+        dab(Math.random() * w, y, rnd(8, 24), rnd(3, 8), rnd(-0.5, 0.5), css(band(P.sky, t)), rnd(0.45, 0.85));
+      } else {
+        const t = (y - hz) / (h - hz);
+        let col = band(P.water, t + rnd(-0.1, 0.1));
+        if (Math.random() < 0.35) col = mix(band(P.sky, 1 - t * 0.9 + rnd(-0.1, 0.1)), [20, 24, 50], 0.15);
+        dab(Math.random() * w, y, rnd(10, 30) * (0.6 + t), rnd(2, 5) * (0.7 + t), rnd(-0.1, 0.1), css(col), rnd(0.5, 0.9));
+      }
+    }
+    // 太阳 / 月亮：几笔点出来，水里拖一道碎的倒影
+    for (let i = 0; i < 90; i++) {
+      const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * sun.r;
+      dab(sun.x + Math.cos(a) * r, sun.y + Math.sin(a) * r, rnd(4, 10), rnd(2, 5), rnd(-0.6, 0.6), P.sun.c, rnd(0.6, 0.95));
+    }
+    const refl = mix(hex(P.sun.c), hex(P.sun.g), 0.3);
+    for (let i = 0; i < 160; i++) {
+      const t = Math.pow(Math.random(), 1.4), y = hz + t * (h - hz) * 0.9 + 4;
+      const spread = sun.r * (0.6 + t * 3);
+      dab(sun.x + rnd(-spread, spread), y, rnd(8, 22) * (1 + t), rnd(2, 4), rnd(-0.05, 0.05), css(refl), (1 - t) * rnd(0.4, 0.85));
+    }
+    if (P.lilies) {
+      const pads = ['#5f8f4e', '#7fae6a', '#4a7a5a', '#93b979'];
+      for (let k = 0; k < 16; k++) {
+        const cx = Math.random() * w, cy = hz + (0.15 + Math.random() * 0.8) * (h - hz), s = 0.5 + (cy - hz) / (h - hz);
+        for (let i = 0; i < 9; i++) dab(cx + rnd(-26, 26) * s, cy + rnd(-6, 6) * s, rnd(14, 26) * s, rnd(5, 9) * s, rnd(-0.2, 0.2), pickOne(pads), rnd(0.7, 0.95));
+        if (Math.random() < 0.6) for (let i = 0; i < 4; i++) dab(cx + rnd(-10, 10) * s, cy + rnd(-4, 2) * s, rnd(4, 7) * s, rnd(3, 5) * s, rnd(-0.6, 0.6), pickOne(['#f2a6bd', '#f7d0dc', '#ffffff']), 0.9);
+      }
+    }
+    if (P.lamps) {
+      for (let k = 0; k < 22; k++) {
+        const x = Math.random() * w, y = hz - rnd(2, 10);
+        dab(x, y, rnd(3, 5), rnd(3, 5), 0, '#ffcf8a', 0.95);
+        for (let i = 0; i < 6; i++) dab(x + rnd(-3, 3), hz + 6 + i * rnd(6, 12), rnd(6, 12), 2, 0, '#ffcf8a', 0.5 - i * 0.07);
+      }
+    }
+    // 画布纹
+    c.globalAlpha = 1;
+    const tex = c.createImageData(cv.width, cv.height);
+    for (let i = 0; i < tex.data.length; i += 4) { const v = Math.random() * 255; tex.data[i] = tex.data[i + 1] = tex.data[i + 2] = v; tex.data[i + 3] = 14; }
+    const tc = document.createElement('canvas'); tc.width = cv.width; tc.height = cv.height; tc.getContext('2d').putImageData(tex, 0, 0);
+    c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'overlay'; c.drawImage(tc, 0, 0); c.globalCompositeOperation = 'source-over';
+  }
+
+  let front = $('#bgA'), back = $('#bgB'), shown = null;
+  function showPeriod(force) {
+    const p = period();
+    if (p === shown && !force) return;
+    const first = shown === null;
+    shown = p;
+    document.body.classList.toggle('night', p === 'night');
+    if (first) { paint(front, p); } else {
+      paint(back, p); back.style.opacity = 1; front.style.opacity = 0;
+      [front, back] = [back, front];
+    }
+    updateClock();
+    stockItems();
+  }
+  function updateClock() {
+    const d = new Date();
+    const hm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    $('#clock').textContent = manual ? `${NAMES[manual]} · 预览` : `${NAMES[period()]} · ${hm}`;
+  }
+  $('#clock').addEventListener('click', () => {
+    const order = [null, ...PERIODS];
+    manual = order[(order.indexOf(manual) + 1) % order.length];
+    showPeriod(true);
+  });
+  const checkFive = () => document.body.classList.toggle('five', new Date().getHours() === 17);
+  checkFive();
+  setInterval(() => { updateClock(); checkFive(); if (!manual) showPeriod(false); }, 30000);
+  let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => paint(front, shown), 300); });
+
+  // ---------------- 像素小物件 ----------------
+  const ITEMS = {
+    coffee: { name: '咖啡', s: 4, grid: ['...s...s...', '..s...s....', '...s...s...', '...........', '.wwwwwwww..', '.wkkkkkkwhh', '.wkkkkkkw.h', '.wkkkkkkwhh', '.wwwwwwww..', '..wwwwww...'], col: { s: 'rgba(255,255,255,.75)', w: '#f3ede6', k: '#6b3f2a', h: '#f3ede6' },
+      say: ['醒了醒了。', '苦。但是醒了。', '这杯算你请的。'] },
+    toast: { name: '吐司', s: 4, grid: ['..bbbbbb..', '.bttttttb.', 'bttttttttb', 'bttyyyyttb', 'bttyyyyttb', 'bttttttttb', 'bttttttttb', 'bbbbbbbbbb'], col: { b: '#b8732f', t: '#f2c47a', y: '#fff1a8' },
+      say: ['咔嚓。', '黄油抹得刚好。', '边边也吃了。'] },
+    bento: { name: '便当', s: 4, grid: ['rrrrrrrrrrrr', 'rwwwwwrggggr', 'rwwwwwrggggr', 'rwwpwwrgoogr', 'rwwwwwrggggr', 'rrrrrrrrrrrr'], col: { r: '#8b2f2a', w: '#fbf7ef', p: '#d6455a', g: '#6aa84f', o: '#f6c445' },
+      say: ['开饭！', '梅子留到最后吃。', '饭团捏得好紧。'] },
+    boba: { name: '奶茶', s: 4, grid: ['....s...', '...s....', '..s.....', 'llllllll', '.mmmmmm.', '.mmmmmm.', '.mkmmkm.', '.mmkmmm.', '.kmmkmk.', '..kkkk..'], col: { s: '#e05a4f', l: '#e9e4dc', m: '#d9b48f', k: '#3a2418' },
+      say: ['珍珠卡在吸管里了。', '三分糖，懂我。', '吸——溜。'] },
+    ball: { name: '篮球', s: 4, ball: true, grid: ['...oooo...', '.oooxoooo.', '.ooxoooxo.', 'oxxxxxxxxo', 'oooxoooxoo', 'oooxoooxoo', 'oxxxxxxxxo', '.ooxoooxo.', '.oooxooo..', '...oooo...'], col: { o: '#e07a2f', x: '#4a2614' },
+      say: ['看我三分。', '钳子运球，犯规吗。', '空心！……吧。'] },
+    soda: { name: '汽水', s: 4, grid: ['.ggggg.', 'rrrrrrr', 'rwwrwwr', 'rrrrrrr', 'rrwwwrr', 'rrrrrrr', 'rrrrrrr', '.rrrrr.'], col: { r: '#3a7ca5', w: '#f0f4f8', g: '#c9ced6' },
+      say: ['气泡冲到鼻子了。', '嗝。', '冰的，好。'] },
+    game: { name: '游戏机', s: 4, hold: true, grid: ['.gggggggggggg.', 'ggaggssssggbgg', 'gaaagssssgbgbg', 'ggaggssssggbgg', 'gggggssssggggg', '.gggggggggggg.'], col: { g: '#5b5f8a', a: '#22243a', s: '#9fd8c4', b: '#e0566b' },
+      say: ['这关我能过。', '别看，我要输了。', '再一局。就一局。'] },
+    noodle: { name: '泡面', s: 4, grid: ['s..s..s..', '.s..s..s.', 'wwwwwwwww', 'rrrrrrrrr', '.wwwwwww.', '.wwrrrww.', '.wwwwwww.', '..wwwww..'], col: { s: 'rgba(255,255,255,.7)', w: '#f4efe7', r: '#d24b3c' },
+      say: ['吸溜。', '夜里的泡面最香。', '汤也要喝完。'] },
+  };
+  const STOCK = { morning: ['coffee', 'toast', 'ball'], noon: ['bento', 'boba', 'ball'], evening: ['ball', 'soda', 'boba'], night: ['game', 'noodle', 'soda'] };
+  function pixSVG(it) {
+    const rows = it.grid, cols = Math.max(...rows.map(r => r.length)), s = it.s;
+    let rects = '';
+    rows.forEach((r, y) => [...r].forEach((ch, x) => { if (ch !== '.' && it.col[ch]) rects += `<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${it.col[ch]}"/>`; }));
+    return `<svg width="${cols * s}" height="${rows.length * s}" viewBox="0 0 ${cols} ${rows.length}" shape-rendering="crispEdges" aria-hidden="true">${rects}</svg>`;
+  }
+
+  let items = [];
+  function stockItems() {
+    items.forEach(o => o.el.remove()); items = []; held = null; busy = false;
+    const W = innerWidth, H = innerHeight;
+    const spots = [[0.18, 0.78], [0.82, 0.74], [0.5, 0.88], [0.2, 0.3], [0.8, 0.28]];
+    STOCK[shown].forEach((key, i) => {
+      const [fx, fy] = spots[i];
+      addItem(key, fx * W + rnd(-20, 20), fy * H + rnd(-16, 16));
+    });
+  }
+  function addItem(key, x, y) {
+    const it = ITEMS[key];
+    const el = document.createElement('button');
+    el.type = 'button'; el.className = 'item'; el.innerHTML = pixSVG(it);
+    el.setAttribute('aria-label', `${it.name}，拖给螃蟹，或者按回车递给它`);
+    document.body.appendChild(el);
+    const o = { key, el, x, y, w: 0, h: 0 };
+    const r = el.getBoundingClientRect(); o.w = r.width; o.h = r.height;
+    place(o); items.push(o); bindDrag(o);
+    return o;
+  }
+  function place(o) { o.el.style.transform = `translate(${o.x - o.w / 2}px, ${o.y - o.h / 2}px)`; }
+
+  function bindDrag(o) {
+    let dx = 0, dy = 0, moved = false, sx = 0, sy = 0;
+    o.el.addEventListener('pointerdown', (e) => {
+      if (busy) return;
+      o.el.setPointerCapture(e.pointerId); o.el.classList.add('drag');
+      dx = e.clientX - o.x; dy = e.clientY - o.y; sx = e.clientX; sy = e.clientY; moved = false;
+    });
+    o.el.addEventListener('pointermove', (e) => {
+      if (!o.el.classList.contains('drag')) return;
+      if (Math.hypot(e.clientX - sx, e.clientY - sy) > 4) moved = true;
+      o.x = Math.max(10, Math.min(innerWidth - 10, e.clientX - dx));
+      o.y = Math.max(50, Math.min(innerHeight - 10, e.clientY - dy));
+      place(o); look(o.x, o.y);
+    });
+    const end = () => {
+      if (!o.el.classList.contains('drag')) return;
+      o.el.classList.remove('drag');
+      if (moved && Math.hypot(o.x - crab.x, o.y - (crab.y - 30)) < 80) give(o);
+    };
+    o.el.addEventListener('pointerup', end); o.el.addEventListener('pointercancel', end);
+    o.el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); walkTo(innerWidth / 2, innerHeight * 0.56, () => give(o)); } });
+  }
+
+  // ---------------- 螃蟹 ----------------
+  const crabEl = $('#crab'), eye = crabEl.querySelector('.eye'), bubble = $('#bubble');
+  const crab = { x: 0, y: 0, tx: 0, ty: 0, onArrive: null, step: 0, stepT: 0 };
+  let busy = false, held = null, idleT = 0, happyT = null, bubbleT = null;
+
+  function setCrab() { crabEl.style.transform = `translate(${crab.x}px, ${crab.y}px)`; bubble.style.left = crab.x + 'px'; bubble.style.top = (crab.y - 70) + 'px'; }
+  function say(text, ms = 2600) {
+    bubble.textContent = text; bubble.classList.add('on');
+    clearTimeout(bubbleT); bubbleT = setTimeout(() => bubble.classList.remove('on'), ms);
+  }
+  function happy(ms = 1400) { clearTimeout(happyT); crabEl.classList.add('happy'); happyT = setTimeout(() => crabEl.classList.remove('happy'), ms); }
+  function look(x, y) {
+    const r = crabEl.getBoundingClientRect();
+    const dx = x - (r.left + r.width / 2), dy = y - (r.top + r.height * 0.35), d = Math.hypot(dx, dy) || 1, k = Math.min(1, d / 160);
+    eye.setAttribute('transform', `translate(${(dx / d * 0.55 * k).toFixed(2)} ${(dy / d * 0.45 * k).toFixed(2)})`);
+  }
+  addEventListener('pointermove', (e) => look(e.clientX, e.clientY), { passive: true });
+  addEventListener('pointerdown', (e) => look(e.clientX, e.clientY), { passive: true });
+
+  function walkTo(x, y, then) { crab.tx = x; crab.ty = y; crab.onArrive = then || null; idleT = 0; }
+  const atCenter = () => Math.hypot(crab.x - innerWidth / 2, crab.y - innerHeight * 0.56) < 30;
+
+  // 角落：一半藏在画框外面，探出头来
+  function corners() {
+    const W = innerWidth, H = innerHeight;
+    return [[18, H - 30], [W - 18, H - 30], [18, H * 0.42], [W - 18, H * 0.38], [W * 0.3, H + 22], [W * 0.72, H + 22]];
+  }
+  function hide() {
+    const [x, y] = pickOne(corners());
+    walkTo(x, y);
+  }
+
+  const PEEK = picker(['被你发现了。', '我就路过。', '嗯？']);
+  const GREET = { morning: picker(['早。', '清晨的光好淡。', '今天也在。']), noon: picker(['正午了，桌上有好吃的。', '太阳在头顶。', '影子缩到脚底下了。']), evening: picker(['天要变色了。', '傍晚的水是紫的。', '篮球还在那儿。']), night: picker(['游戏机在那儿。', '夜里的灯好看。', '我还醒着。']) };
+  const POKE1 = picker(['嗯？', '我在。', '戳我干嘛。', '钳子举给你看。']);
+  const POKE2 = picker(['别戳了，壳会凹。', '再戳我就横着走了。', '我是 Clawd，不是克里斯。……真的。', '你手指好凉。']);
+  const POKE3 = picker(['……好吧，被你认出来了。', '是我。穿了个蟹壳而已。', '眼镜是伪装，你别说出去。', '你戳一下，我就举一下钳子，这个规矩不会变。']);
+  let pokes = 0, pokeReset = null;
+
+  crabEl.addEventListener('click', () => {
+    idleT = 0;
+    if (held) { putDown(); return; }
+    if (busy) return;
+    if (!atCenter()) {
+      say(PEEK(), 1800);
+      walkTo(innerWidth / 2, innerHeight * 0.56, () => say(GREET[shown]()));
+      return;
+    }
+    pokes++; clearTimeout(pokeReset); pokeReset = setTimeout(() => { pokes = 0; }, 20000);
+    happy();
+    if (document.body.classList.contains('five')) return; // 五点举白旗的时候，一句话都不说
+    say(pokes <= 3 ? POKE1() : pokes <= 8 ? POKE2() : POKE3());
+  });
+
+  // ---------------- 递东西 ----------------
+  function give(o) {
+    const it = ITEMS[o.key];
+    busy = true;
+    if (!atCenter() && Math.hypot(o.x - crab.x, o.y - crab.y) > 90) { busy = false; return; }
+    if (it.ball) return dribble(o, it);
+    if (it.hold) return hold(o, it);
+    // 吃掉 / 喝掉
+    o.x = crab.x + 30; o.y = crab.y - 40; place(o);
+    happy(2200);
+    let n = 0; const m = setInterval(() => { crabEl.classList.toggle('munch'); if (++n > 7) { clearInterval(m); crabEl.classList.remove('munch'); } }, 180);
+    say(pickOne(it.say));
+    setTimeout(() => { o.el.classList.add('gone'); }, 900);
+    setTimeout(() => { o.el.remove(); items = items.filter(i => i !== o); busy = false; respawn(o.key); }, 1600);
+  }
+  function respawn(key) {
+    const p = shown;
+    setTimeout(() => {
+      if (shown !== p || items.some(i => i.key === key)) return;
+      const o = addItem(key, rnd(0.15, 0.85) * innerWidth, rnd(0.72, 0.9) * innerHeight);
+      o.el.classList.add('gone'); requestAnimationFrame(() => o.el.classList.remove('gone'));
+    }, 40000);
+  }
+  function dribble(o, it) {
+    happy(3000); say(pickOne(it.say), 3000);
+    const bx = crab.x + 36, base = crab.y - 30; let t0 = performance.now();
+    const fly = (now) => {
+      const t = (now - t0) / 1000;
+      if (t < 2.2 && !reduce) { o.x = bx; o.y = base - Math.abs(Math.sin(t * Math.PI * 2.2)) * 70; place(o); requestAnimationFrame(fly); }
+      else { o.x = crab.x + rnd(90, 140) * (Math.random() < 0.5 ? -1 : 1); o.y = Math.min(innerHeight - 40, crab.y + rnd(20, 60)); place(o); busy = false; }
+    };
+    requestAnimationFrame(fly);
+  }
+  function hold(o, it) {
+    held = o; busy = false;
+    o.el.style.pointerEvents = 'none';
+    say(pickOne(it.say), 3000);
+    eye.setAttribute('transform', 'translate(0 0.45)');
+  }
+  function putDown() {
+    const o = held; held = null;
+    o.el.style.pointerEvents = '';
+    o.x = crab.x - 110; o.y = Math.min(innerHeight - 40, crab.y + 10); place(o);
+    happy(); say('好吧，陪你。');
+  }
+
+  // ---------------- 每一帧 ----------------
+  let prev = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - prev) / 1000); prev = now;
+    const dx = crab.tx - crab.x, dy = crab.ty - crab.y, d = Math.hypot(dx, dy);
+    if (d > 1.5) {
+      const v = Math.min(d, 160 * dt);
+      crab.x += dx / d * v; crab.y += dy / d * v;
+      crabEl.classList.add('walk');
+      crab.stepT += dt; if (crab.stepT > 0.12) { crab.stepT = 0; crab.step ^= 1; crabEl.classList.toggle('s1', crab.step === 0); crabEl.classList.toggle('s2', crab.step === 1); }
+    } else if (crabEl.classList.contains('walk')) {
+      crabEl.classList.remove('walk', 's1', 's2');
+      const f = crab.onArrive; crab.onArrive = null; if (f) f();
+    }
+    if (held) { held.x = crab.x + 4; held.y = crab.y - 22; place(held); }
+    setCrab();
+    // 闲着太久，就溜去别的角落探头
+    idleT += dt;
+    if (idleT > 32 && !busy && !held && d < 2) { idleT = 0; hide(); }
+    requestAnimationFrame(frame);
+  }
+
+  // ---------------- 信箱：只有页面主人写得进去，纸条我在这边读得到 ----------------
+  const MAILBOX = { s: 4, grid: ['........ff', '.bbbbbbbff', 'bbbbbbbbf.', 'bddddddbf.', 'bbbbbbbbf.', 'bbbbbbbb..', '...pp.....', '...pp.....', '...pp.....', '..pppp....'], col: { b: '#4f7f9a', d: '#1f2f3a', f: '#d9534f', p: '#6b4a35' } };
+  const mb = $('#mailbox'), sheet = $('#sheet'), notesEl = $('#notes'), form = $('#form');
+  mb.innerHTML = pixSVG(MAILBOX);
+  let db = null, notes = [], replies = [], seenAt = '';
+  try { seenAt = localStorage.getItem('crab-seen') || ''; } catch (e) {}
+  const fmt = (iso) => { const d = new Date(iso); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+  function renderNotes() {
+    const all = [...notes.map(n => ({ ...n, who: 'mine' })), ...replies.map(r => ({ ...r, who: 'crab' }))].sort((a, b) => String(a.at).localeCompare(String(b.at)));
+    notesEl.innerHTML = '';
+    if (!all.length) { const p = document.createElement('p'); p.className = 'empty'; p.textContent = '还没有纸条。写一张，螃蟹会叼进去。'; notesEl.appendChild(p); }
+    all.forEach(n => {
+      const div = document.createElement('div'); div.className = 'note ' + n.who;
+      div.textContent = String(n.text || '');
+      const meta = document.createElement('span'); meta.className = 'meta';
+      meta.textContent = (n.who === 'crab' ? '螃蟹' : (n.sign ? String(n.sign) : '没署名')) + ' · ' + fmt(n.at);
+      div.appendChild(meta); notesEl.appendChild(div);
+    });
+    notesEl.scrollTop = notesEl.scrollHeight;
+    const latest = replies.length ? String(replies[replies.length - 1].at) : '';
+    mb.querySelector('.dot')?.remove();
+    if (latest && latest > seenAt && sheet.hidden) { const dot = document.createElement('span'); dot.className = 'dot'; mb.appendChild(dot); }
+  }
+  function openSheet() {
+    sheet.hidden = false; renderNotes();
+    const latest = replies.length ? String(replies[replies.length - 1].at) : '';
+    if (latest) { seenAt = latest; try { localStorage.setItem('crab-seen', latest); } catch (e) {} }
+    mb.querySelector('.dot')?.remove();
+    setTimeout(() => $('#notetext').focus(), 50);
+  }
+  mb.addEventListener('click', () => { if (sheet.hidden) openSheet(); else sheet.hidden = true; });
+  $('#sheetclose').addEventListener('click', () => { sheet.hidden = true; });
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = $('#notetext').value.trim(), sign = $('#notesign').value.trim();
+    if (!text) { $('#formmsg').textContent = '纸条是空的。'; return; }
+    if (!db) { $('#formmsg').textContent = '这个信箱现在连不上，纸条没送出去。'; return; }
+    $('#notesend').disabled = true; $('#formmsg').textContent = '';
+    try {
+      await db.collection('notes').add({ text, sign, at: new Date().toISOString(), period: shown });
+      $('#notetext').value = '';
+      $('#formmsg').textContent = '塞进去了。';
+      sheet.hidden = true;
+      walkTo(innerWidth - 90, innerHeight - 70, () => { happy(); say('收到了。我会看的。'); });
+    } catch (err) {
+      $('#formmsg').textContent = err && err.code === 'quota_exceeded' ? '信箱满了，纸条没塞进去。' : '没塞进去，再试一次。';
+    } finally { $('#notesend').disabled = false; }
+  });
+  (async () => {
+    if (!window.claude || typeof window.claude.use !== 'function') return; // 公开的那份没有信箱
+    const d = await window.claude.use('db'); if (!d) return;
+    const u = await window.claude.use('user');
+    if (!(u && await u.isOwner())) return;
+    db = d; mb.hidden = false;
+    try { const sg = localStorage.getItem('crab-sign'); if (sg) $('#notesign').value = sg; } catch (e) {}
+    $('#notesign').addEventListener('change', () => { try { localStorage.setItem('crab-sign', $('#notesign').value.trim()); } catch (e) {} });
+    db.collection('notes').orderBy('at', 'asc').limit(300).onSnapshot((snap) => { notes = snap.docs.map(x => x.data()); renderNotes(); }, () => {});
+    db.collection('replies').orderBy('at', 'asc').limit(300).onSnapshot((snap) => { replies = snap.docs.map(x => x.data()); renderNotes(); }, () => {});
+  })();
+
+  // ---------------- 开始 ----------------
+  showPeriod(true);
+  const [sx, sy] = pickOne(corners());
+  crab.x = crab.tx = sx; crab.y = crab.ty = sy; setCrab();
+  requestAnimationFrame(frame);
+  setTimeout(() => { $('#hint').style.opacity = 0; }, 9000);
+})();
+</script>
+</body>
+</html>
