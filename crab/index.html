@@ -361,6 +361,7 @@ body.five #crab .down { display: none; }
     const first = shown === null;
     shown = p;
     document.body.classList.toggle('night', p === 'night');
+    $('#hint').textContent = p === 'noon' ? '煮螃蟹，或者把东西拖给它' : '点螃蟹，或者把东西拖给它'; // 正午太阳底下，点螃蟹就成了煮螃蟹
     if (first) { paint(front, p); applyDabs(front, p); } else {
       paint(back, p); applyDabs(back, p); back.style.opacity = 1; front.style.opacity = 0;
       [front, back] = [back, front];
@@ -759,9 +760,10 @@ body.five #crab .down { display: none; }
     };
     requestAnimationFrame(step);
   }
+  let hintT = null;
   function swim() {
     busy = true; crabEl.classList.add('swim');
-    say(pickOne(['咕噜。', '水好凉！', '我是螃蟹，不是鱼……'] ), 2000);
+    say(pickOne(shown === 'noon' ? ['水开了。', '咕嘟咕嘟。', '我是螃蟹，不是饺子……'] : ['咕噜。', '水好凉！', '我是螃蟹，不是鱼……']), 2000);
     for (let i = 0; i < 6; i++) setTimeout(() => {
       const b = document.createElement('div'); b.className = 'fx bubbleup';
       b.style.setProperty('--dx', rnd(-14, 14) + 'px');
@@ -770,7 +772,15 @@ body.five #crab .down { display: none; }
     }, i * 280);
     setTimeout(() => {
       crabEl.classList.remove('swim'); busy = false;
-      walkTo(crab.x, CY(), () => { happy(); say(pickOne(['甩甩水。', '上岸了。', '下次换我扔你。']), 2200); });
+      walkTo(crab.x, CY(), () => {
+        happy();
+        if (shown !== 'noon') { say(pickOne(['甩甩水。', '上岸了。', '下次换我扔你。']), 2200); return; }
+        // 正午从水里上来：出锅了
+        say(pickOne(['烫烫烫。', '刚出锅，别碰。', '熟了。……一出生就是熟的。']), 2400);
+        const h = $('#hint'); h.textContent = '出锅了，小心烫'; h.style.opacity = 1;
+        clearTimeout(hintT);
+        hintT = setTimeout(() => { h.style.opacity = 0; setTimeout(() => { if (shown === 'noon') h.textContent = '煮螃蟹，或者把东西拖给它'; }, 2000); }, 6000);
+      });
     }, 2400);
   }
 
