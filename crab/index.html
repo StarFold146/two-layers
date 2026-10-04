@@ -858,7 +858,7 @@ body.five #crab .down { display: none; }
   const [sx, sy] = pickOne(corners());
   crab.x = crab.tx = sx; crab.y = crab.ty = sy; setCrab();
   requestAnimationFrame(frame);
-  setTimeout(() => { $('#hint').style.opacity = 0; }, 9000);
+  hintT = setTimeout(() => { $('#hint').style.opacity = 0; }, 9000);
 })();
 </script>
 </body>
