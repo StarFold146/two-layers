@@ -283,7 +283,7 @@ body.five #crab .down { display: none; }
 @keyframes breathe { 50% { transform: scale(1.03, 0.96); } }
 #crab.groove svg { animation: groove 0.5s steps(2) infinite; transform-origin: 50% 100%; }
 @keyframes groove { 0% { transform: rotate(-7deg); } 50% { transform: rotate(7deg) translateY(-3px); } }
-.zz { font-size: 17px; color: rgba(251, 247, 240, 0.92); text-shadow: 0 1px 2px rgba(42, 37, 34, 0.35); animation: zz 2.2s ease-out forwards; }
+.zz { font-family: "Silkscreen", monospace; font-size: 17px; line-height: 1; color: rgba(251, 247, 240, 0.92); text-shadow: 0 1px 2px rgba(42, 37, 34, 0.35); animation: zz 2.2s ease-out forwards; }
 @keyframes zz { to { transform: translate(var(--dx), -64px) rotate(14deg); opacity: 0; } }
 #closeup { position: fixed; inset: 0; z-index: 7; pointer-events: none; overflow: hidden; }
 #closeup.in { pointer-events: auto; cursor: pointer; }
@@ -1360,7 +1360,7 @@ body.five #crab .down { display: none; }
   let sleeping = false, zzT = null, sleepEnd = null, grooving = false, grooveT = null, pressing = false, fed = 0, idleN = 0;
   function puff(text, cls, dur) {
     const z = document.createElement('div'); z.className = 'fx ' + cls; z.textContent = text;
-    z.style.setProperty('--dx', rnd(-10, 18) + 'px');
+    z.style.setProperty('--dx', rnd(-10, 18) + 'px'); z.style.fontSize = Math.round(rnd(12, 22)) + 'px';
     z.style.left = (crab.x + rnd(6, 26)) + 'px'; z.style.top = (crab.y - 66) + 'px';
     document.body.appendChild(z); setTimeout(() => z.remove(), dur);
   }
