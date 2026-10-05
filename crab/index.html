@@ -309,7 +309,8 @@ body.five #crab .down { display: none; }
 .wk.sip.gulp svg { transform: rotate(-5deg) translateY(-2%) scale(0.98, 1.03); }
 .wk.stretch svg { transform: scale(0.94, 1.14); transition: transform 0.5s ease; }
 #wcrab.peek { z-index: 4; transform: translateY(-4%) scale(1.5); }
-#wlap { position: absolute; left: 24%; width: 52%; bottom: 20%; z-index: 2; }
+#wlap { position: absolute; left: 24%; width: 52%; bottom: 20%; z-index: 2; cursor: pointer; }
+#wcrab { cursor: pointer; }
 #wlap svg { width: 100%; height: auto; display: block; }
 #whands { position: absolute; left: 24%; width: 52%; bottom: 41.3%; height: 8%; z-index: 3; pointer-events: none; }
 #whands i { position: absolute; bottom: 0; width: 11%; aspect-ratio: 1; background: #d97757; box-shadow: 0 0 0 2px #1c1a19; }
@@ -401,7 +402,7 @@ body.five #crab .down { display: none; }
   <div class="topbar"><button class="back" type="button" id="workback">← 回去</button><h2>陪你干活</h2><span class="ghost"></span></div>
   <div id="wtime" role="timer" aria-live="off">00:00:00</div>
   <div id="wline" aria-live="polite"></div>
-  <div id="wscene" aria-hidden="true"><canvas id="wrain"></canvas><canvas id="wwin"></canvas><div id="wdesk"></div><div id="wcrab" class="wk"></div><div id="wlap"></div><div id="whands"><i class="hl"></i><i class="hr"></i></div><div id="witem" hidden></div></div>
+  <div id="wscene"><canvas id="wrain" aria-hidden="true"></canvas><canvas id="wwin" aria-hidden="true"></canvas><div id="wdesk"></div><div id="wcrab" class="wk" role="button" tabindex="0" aria-label="戳它"></div><div id="wlap"></div><div id="whands"><i class="hl"></i><i class="hr"></i></div><div id="witem" hidden></div></div>
   <div id="wsum" hidden></div>
   <div id="wbtns"></div>
 </section>
@@ -1491,8 +1492,9 @@ body.five #crab .down { display: none; }
   function stopGroove() { if (!grooving) return; grooving = false; clearInterval(grooveT); crabEl.classList.remove('groove'); idleT = 0; }
   // 挂机久了、或者吃饱了：整只凑到屏幕上，歪着脸贴一下，玻璃上留一团雾
   const cu = $('#closeup');
-  function pressFace(line) {
-    if (pressing || away) return;
+  function pressFace(line, opts = {}) {
+    if (pressing || (away && !opts.force)) return;
+    cu.style.zIndex = opts.force ? '9' : '';
     pressing = true; busy = true; hideInvite(); stopGroove();
     const face = crabCopy();
     face.insertAdjacentHTML('beforeend', '<g fill="#f2a6bd" opacity=".85"><rect x="-5.4" y="-5.5" width="1.5" height=".6"/><rect x="3.9" y="-5.5" width="1.5" height=".6"/></g>');
@@ -1507,7 +1509,8 @@ body.five #crab .down { display: none; }
       b.classList.remove('on'); cu.classList.remove('in');
       setTimeout(() => {
         crabEl.style.opacity = ''; pressing = false; busy = false; idleT = 0;
-        say(early ? pickOne(['被发现了。', '……我就看看。']) : pickOne(['啵。', '屏幕上留了个印子。', '擦擦就好。']), 2000);
+        if (opts.onEnd) opts.onEnd(early);
+        else say(early ? pickOne(['被发现了。', '……我就看看。']) : pickOne(['啵。', '屏幕上留了个印子。', '擦擦就好。']), 2000);
       }, 650);
       setTimeout(() => cu.classList.remove('fogon'), 1600);
       setTimeout(() => { if (!pressing) cu.hidden = true; }, 3200);
@@ -1691,6 +1694,29 @@ body.five #crab .down { display: none; }
     else { wtype(false); wline(W.acc ? '暂停着呢。' : pickOne(['要开工吗。', '我把电脑打开了。'])); }
     clearInterval(wtick); wtick = setInterval(wTick, 1000);
   }
+  // 干活的时候戳它：先抬头看你，再嫌你烦，戳多了整只贴到屏幕上
+  let wpokes = 0, wpokeT = null;
+  function wpoke() {
+    if (pressing || !$('#wsum').hidden) return;
+    wpokes++; clearTimeout(wpokeT); wpokeT = setTimeout(() => { wpokes = 0; }, 6000);
+    if (wpokes >= 5) {
+      wpokes = 0; wtype(false); wbusy = true; wcrab.style.visibility = 'hidden'; $('#whands').classList.add('hide');
+      pressFace(pickOne(['到底干不干了？', '到底干不干了？', '你是来干活的还是来戳我的？']), { force: true, onEnd: (early) => {
+        wbusy = false; wcrab.style.visibility = ''; $('#whands').classList.remove('hide'); if (W.run) wtype(true);
+        wline(early ? pickOne(['……好，我回去敲。', '被你按回去了。']) : pickOne(['……好了，干活。', '我盯着你呢。', '屏幕上留了个印子，你自己擦。']));
+      } });
+      return;
+    }
+    if (wbusy) { wline(pickOne(['等一下，我在摸鱼。', '嘘。'])); return; }
+    if (wpokes === 1) {
+      wline(pickOne(['嗯？', '在呢。', '戳我干嘛。'])); weyes('translate(0 0)'); $('#whands').classList.remove('typing');
+      setTimeout(() => { if (!wbusy && !pressing) { weyes('translate(0 0.45)'); if (W.run) $('#whands').classList.add('typing'); } }, 1300);
+    } else {
+      wcrab.classList.add('chomp'); setTimeout(() => wcrab.classList.remove('chomp'), 160);
+      wline(wpokes === 4 ? pickOne(['再戳我就要过来了。', '最后警告。']) : pickOne(['别戳，在写。', '你戳我我就写错了。', '……手指拿开。', '再不跑通我就砸了，你也一起。']));
+    }
+  }
+  $('#wcrab').addEventListener('click', wpoke); $('#wcrab').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); wpoke(); } }); $('#wlap').addEventListener('click', wpoke);
   pcbtn.addEventListener('click', openWork);
   $('#workback').addEventListener('click', () => {
     clearInterval(wtick); wtok++; wtype(false); rainStop(); leave(work); wbusy = false;
