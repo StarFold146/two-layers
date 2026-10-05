@@ -291,6 +291,7 @@ body.five #crab .down { display: none; }
 #work.dark #wline { color: #b9bdd0; }
 #wscene { position: relative; width: min(100%, 440px); aspect-ratio: 1 / 1; flex: none; overflow: hidden; border-radius: 6px; background: #e3d7c2; box-shadow: inset 0 0 0 1px rgba(42, 37, 34, 0.08); }
 #work.dark #wscene { background: #2e3254; }
+#wrain { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
 #wwin { position: absolute; left: 6%; top: 6%; width: 30%; height: 24%; border: 5px solid #f4efe6; box-shadow: 0 2px 0 rgba(42, 37, 34, 0.15); background: #cfd6ea; }
 #wdesk { position: absolute; left: 0; right: 0; bottom: 0; height: 24%; background: #8a5a3c; border-top: 5px solid #6b4630; }
 #wcrab { position: absolute; left: 28%; width: 44%; bottom: 32.5%; z-index: 1; transform-origin: 50% 100%; transition: transform 0.6s cubic-bezier(.2, .8, .2, 1); }
@@ -400,7 +401,7 @@ body.five #crab .down { display: none; }
   <div class="topbar"><button class="back" type="button" id="workback">← 回去</button><h2>陪你干活</h2><span class="ghost"></span></div>
   <div id="wtime" role="timer" aria-live="off">00:00:00</div>
   <div id="wline" aria-live="polite"></div>
-  <div id="wscene" aria-hidden="true"><canvas id="wwin"></canvas><div id="wdesk"></div><div id="wcrab" class="wk"></div><div id="wlap"></div><div id="whands"><i class="hl"></i><i class="hr"></i></div><div id="witem" hidden></div></div>
+  <div id="wscene" aria-hidden="true"><canvas id="wrain"></canvas><canvas id="wwin"></canvas><div id="wdesk"></div><div id="wcrab" class="wk"></div><div id="wlap"></div><div id="whands"><i class="hl"></i><i class="hr"></i></div><div id="witem" hidden></div></div>
   <div id="wsum" hidden></div>
   <div id="wbtns"></div>
 </section>
@@ -1548,6 +1549,49 @@ body.five #crab .down { display: none; }
     wcrab.replaceChildren(svg); weyes('translate(0 0.45)');
   }
   function frontPeek(on) { $('#whands').classList.toggle('hide', on); weyes(on ? 'translate(0 0)' : 'translate(0 0.45)'); }
+  // 背景里偶尔落一阵代码雨：一竖串一个颜色、一个透明度，不发光
+  const rain = { on: false, a: 0, cols: [], raf: 0, until: 0, next: 0, last: 0, w: 0, h: 0 };
+  const GLYPH = '01{}[]<>/=+;:#$%&*ABCDEFabcdef0123456789λΣ∂';
+  function rainCol(init) {
+    const night = shown === 'night', pal = night ? ['#7fb3d5', '#9fd8c4', '#b9a6e0', '#e8c547'] : ['#5b5f8a', '#3e6f6a', '#8a5a3c', '#d97757'];
+    const cw = 11, n = Math.max(6, Math.floor(rain.w / cw));
+    return { x: (Math.floor(Math.random() * n) + 0.5) * cw, y: init ? rnd(-rain.h * 0.5, rain.h * 0.7) : rnd(-rain.h * 0.5, -10), v: rnd(28, 64),
+      chars: Array.from({ length: rint(6, 15) }, () => pickOne([...GLYPH])), col: pickOne(pal), a: night ? rnd(0.25, 0.55) : rnd(0.18, 0.38) };
+  }
+  function rainFrame(now) {
+    const cv = $('#wrain'), c = cv.getContext('2d');
+    const dt = Math.min(0.05, (now - (rain.last || now)) / 1000); rain.last = now;
+    const t = Date.now();
+    if (W.run && !wbusy && !rain.on && t > rain.next) {
+      rain.on = true; rain.until = t + rnd(7000, 10000);
+      if (Math.random() < 0.5 && !$('#wline').textContent) wline(pickOne(['看，它在跑了。', '数据来了。', '别眨眼。']));
+    }
+    if (rain.on && (t > rain.until || !W.run)) { rain.on = false; rain.next = t + rnd(18000, 40000); }
+    rain.a = Math.max(0, Math.min(1, rain.a + (rain.on ? dt : -dt)));
+    c.clearRect(0, 0, cv.width, cv.height);
+    if (rain.a > 0) {
+      c.save(); c.scale(cv.width / rain.w, cv.height / rain.h);
+      c.font = '10px "Silkscreen", monospace'; c.textAlign = 'center';
+      rain.cols.forEach((col, k) => {
+        c.globalAlpha = col.a * rain.a; c.fillStyle = col.col;
+        col.chars.forEach((ch, i) => c.fillText(ch, col.x, col.y - i * 12));
+        col.y += col.v * dt;
+        if (Math.random() < 0.03) col.chars[rint(0, col.chars.length - 1)] = pickOne([...GLYPH]);
+        if (col.y - col.chars.length * 12 > rain.h) rain.cols[k] = rainCol(false);
+      });
+      c.restore();
+    }
+    rain.raf = requestAnimationFrame(rainFrame);
+  }
+  function rainStart() {
+    const cv = $('#wrain'), r = cv.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
+    rain.w = Math.max(1, r.width); rain.h = Math.max(1, r.height);
+    cv.width = Math.round(rain.w * dpr); cv.height = Math.round(rain.h * dpr);
+    rain.cols = Array.from({ length: 16 }, () => rainCol(true));
+    rain.on = false; rain.a = 0; rain.last = 0; rain.next = Date.now() + rnd(6000, 14000);
+    cancelAnimationFrame(rain.raf); if (!reduce) rain.raf = requestAnimationFrame(rainFrame);
+  }
+  function rainStop() { cancelAnimationFrame(rain.raf); rain.on = false; rain.a = 0; }
   function drawWin() {
     const cv = $('#wwin'), r = cv.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
     cv.width = Math.max(1, Math.round(r.width * dpr)); cv.height = Math.max(1, Math.round(r.height * dpr));
@@ -1563,7 +1607,7 @@ body.five #crab .down { display: none; }
     }, 170);
   }
   function wtype(on) { wcrab.classList.toggle('typing', on); $('#whands').classList.toggle('typing', on); keyTaps(on); }
-  const TYPE = ['嗒嗒嗒。', '在写，在写。', '这个变量叫什么好。', '跑通了。……又没跑通。', '我写我的，你忙你的。', '这一段删了重写。', '你那边顺吗。'];
+  const TYPE = ['再不跑通我就砸了。', '跑！给我跑！', '……我没砸，我在敲。', '咚咚咚。', '嗒嗒嗒。', '在写，在写。', '这个变量叫什么好。', '跑通了。……又没跑通。', '我写我的，你忙你的。', '这一段删了重写。', '你那边顺吗。'];
   const MOYU = ['snack', 'snack', 'stretch', 'window', 'peek', 'doze'];
   async function moyu(kind) {
     wbusy = true; wtype(false);
@@ -1586,7 +1630,7 @@ body.five #crab .down { display: none; }
     } else {
       wcrab.classList.add('doze'); wline('……'); await wwait(2200); wcrab.classList.remove('doze'); wline(pickOne(['没睡！', '我醒着。', '刚才那下不算。'])); await wwait(1200);
     }
-    W.moyu++; wsave(); wbusy = false; nextEvt = Date.now() + rnd(25, 55) * 1000;
+    W.moyu++; wsave(); wbusy = false; nextEvt = Date.now() + rnd(15, 35) * 1000;
     if (W.run) wtype(true);
   }
   function wbuttons() {
@@ -1600,7 +1644,7 @@ body.five #crab .down { display: none; }
   function wstart() {
     const first = W.acc === 0;
     W.run = true; W.start = Date.now(); wsave(); pcbtn.classList.add('on');
-    nextEvt = Date.now() + rnd(20, 45) * 1000; if (!wbusy) wtype(true);
+    nextEvt = Date.now() + rnd(10, 20) * 1000; if (!wbusy) wtype(true);
     wline(first ? pickOne(['开工。', '我也开工了。', '来，一起。']) : pickOne(['继续。', '接着来。'])); wbuttons();
   }
   function wpause() {
@@ -1641,15 +1685,15 @@ body.five #crab .down { display: none; }
     hideInvite(); away = true; sheet.hidden = true; closet.hidden = true; work.hidden = false;
     work.classList.toggle('dark', shown === 'night');
     buildWorkCrab(); frontPeek(false); witem.hidden = true; $('#wsum').hidden = true; wbusy = false; wtok++;
-    requestAnimationFrame(drawWin);
+    requestAnimationFrame(() => { drawWin(); rainStart(); });
     $('#wtime').textContent = hms(welapsed()); wbuttons();
-    if (W.run) { wtype(true); nextEvt = Date.now() + rnd(15, 40) * 1000; wline('我一直在敲，你回来了。'); }
+    if (W.run) { wtype(true); nextEvt = Date.now() + rnd(10, 20) * 1000; wline('我一直在敲，你回来了。'); }
     else { wtype(false); wline(W.acc ? '暂停着呢。' : pickOne(['要开工吗。', '我把电脑打开了。'])); }
     clearInterval(wtick); wtick = setInterval(wTick, 1000);
   }
   pcbtn.addEventListener('click', openWork);
   $('#workback').addEventListener('click', () => {
-    clearInterval(wtick); wtok++; wtype(false); leave(work); wbusy = false;
+    clearInterval(wtick); wtok++; wtype(false); rainStop(); leave(work); wbusy = false;
     if (W.run) say(pickOne(['你忙，我接着敲。', '计时还在走。']), 2400);
   });
 
