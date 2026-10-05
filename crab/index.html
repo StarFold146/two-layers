@@ -388,22 +388,26 @@ body.five #crab .down { display: none; }
   const ITEMS = {
     coffee: { name: '咖啡', s: 4, grid: ['...s...s...', '..s...s....', '...s...s...', '...........', '.wwwwwwww..', '.wkkkkkkwhh', '.wkkkkkkw.h', '.wkkkkkkwhh', '.wwwwwwww..', '..wwwwww...'], col: { s: 'rgba(255,255,255,.75)', w: '#f3ede6', k: '#6b3f2a', h: '#f3ede6' },
       say: ['醒了醒了。', '苦。但是醒了。', '这杯算你请的。'] },
-    toast: { name: '吐司', s: 4, grid: ['..bbbbbb..', '.bttttttb.', 'bttttttttb', 'bttyyyyttb', 'bttyyyyttb', 'bttttttttb', 'bttttttttb', 'bbbbbbbbbb'], col: { b: '#b8732f', t: '#f2c47a', y: '#fff1a8' },
-      say: ['咔嚓。', '黄油抹得刚好。', '边边也吃了。'] },
+    croissant: { name: '可颂', s: 4, grid: ['...bbbbbb...', '.bbyybbyybb.', 'byyybyyybyyb', 'byybbyybbyyb', '.bb......bb.', '..b......b..'], col: { b: '#b8732f', y: '#eaa94f' },
+      say: ['酥皮掉了一身。', '渣渣我会扫干净的。', '早饭要吃得像个法国人。'] },
+    tennis: { name: '网球', s: 4, ball: true, grid: ['...yyyy...', '.wyyyyyyw.', 'yywyyyywyy', 'yyywyywyyy', 'yyywyywyyy', 'yyywyywyyy', 'yyywyywyyy', 'yywyyyywyy', '.wyyyyyyw.', '...yyyy...'], col: { y: '#d4dd55', w: '#f7f6ec' },
+      say: ['叼回来了！', '再扔一次，再扔一次。', '……螃蟹也可以追球的。'] },
     bento: { name: '便当', s: 4, grid: ['rrrrrrrrrrrr', 'rwwwwwrggggr', 'rwwwwwrggggr', 'rwwpwwrgoogr', 'rwwwwwrggggr', 'rrrrrrrrrrrr'], col: { r: '#8b2f2a', w: '#fbf7ef', p: '#d6455a', g: '#6aa84f', o: '#f6c445' },
       say: ['开饭！', '梅子留到最后吃。', '饭团捏得好紧。'] },
+    cake: { name: '草莓蛋糕', s: 4, grid: ['....g.....', '...rrr....', '...rrr....', 'cccccccccc', 'yyyyyyyyyy', 'crcccrcccr', 'yyyyyyyyyy', 'cccccccccc'], col: { c: '#fbf3ea', y: '#f1cf8a', r: '#e0434f', g: '#5f9a4a' },
+      say: ['最上面那颗草莓是你的。', '奶油沾到钳子上了。', '我只吃第二层。'] },
     boba: { name: '奶茶', s: 4, grid: ['....s...', '...s....', '..s.....', 'llllllll', '.mmmmmm.', '.mmmmmm.', '.mkmmkm.', '.mmkmmm.', '.kmmkmk.', '..kkkk..'], col: { s: '#e05a4f', l: '#e9e4dc', m: '#d9b48f', k: '#3a2418' },
       say: ['珍珠卡在吸管里了。', '三分糖，懂我。', '吸——溜。'] },
-    ball: { name: '篮球', s: 4, ball: true, grid: ['...oooo...', '.oooxoooo.', '.ooxoooxo.', 'oxxxxxxxxo', 'oooxoooxoo', 'oooxoooxoo', 'oxxxxxxxxo', '.ooxoooxo.', '.oooxooo..', '...oooo...'], col: { o: '#e07a2f', x: '#4a2614' },
-      say: ['看我三分。', '钳子运球，犯规吗。', '空心！……吧。'] },
-    soda: { name: '汽水', s: 4, grid: ['.ggggg.', 'rrrrrrr', 'rwwrwwr', 'rrrrrrr', 'rrwwwrr', 'rrrrrrr', 'rrrrrrr', '.rrrrr.'], col: { r: '#3a7ca5', w: '#f0f4f8', g: '#c9ced6' },
-      say: ['气泡冲到鼻子了。', '嗝。', '冰的，好。'] },
-    game: { name: '游戏机', s: 4, hold: true, grid: ['.gggggggggggg.', 'ggaggssssggbgg', 'gaaagssssgbgbg', 'ggaggssssggbgg', 'gggggssssggggg', '.gggggggggggg.'], col: { g: '#5b5f8a', a: '#22243a', s: '#9fd8c4', b: '#e0566b' },
-      say: ['这关我能过。', '别看，我要输了。', '再一局。就一局。'] },
+    palette: { name: '调色板', s: 4, hold: true, grid: ['...wwwwww...', '.wwrwwwbwww.', 'wwwwwwwwwwyw', 'wgww..wwwwww', 'wwww..wwwpww', 'wwwwwwwwwwww', '.wwwwwwwww..', '...wwwww....'], col: { w: '#e6d3ad', r: '#d6455a', b: '#2f4b8a', y: '#f2c94c', g: '#7a9a6a', p: '#e8a0b0' },
+      say: ['傍晚的水，调了三遍。', '这块深蓝留着夜里用。', '别动，你站在光里。'], down: '颜料没干，别碰。' },
+    slipper: { name: '拖鞋', s: 4, hold: true, grid: ['k..k........', 'pppp........', 'pkkpp.......', 'pkkppp......', 'pppppppppkkp', 'ssssssssssss'], col: { p: '#f6f2ec', k: '#2a2522', s: '#c9a99a' },
+      say: ['你的拖鞋。我先收着。', '不还。', '藏进画里了，自己来找。'], down: '……借你穿一下。' },
     noodle: { name: '泡面', s: 4, grid: ['s..s..s..', '.s..s..s.', 'wwwwwwwww', 'rrrrrrrrr', '.wwwwwww.', '.wwrrrww.', '.wwwwwww.', '..wwwww..'], col: { s: 'rgba(255,255,255,.7)', w: '#f4efe7', r: '#d24b3c' },
       say: ['吸溜。', '夜里的泡面最香。', '汤也要喝完。'] },
+    milk: { name: '热牛奶', s: 4, grid: ['...s...s...', '..s...s....', '...s...s...', '...........', '.wwwwwwww..', '.wkkkkkkwhh', '.wkkkkkkw.h', '.wkkkkkkwhh', '.wwwwwwww..', '..wwwwww...'], col: { s: 'rgba(255,255,255,.75)', w: '#9fb7d6', k: '#fbf7ef', h: '#9fb7d6' },
+      say: ['温的。', '喝完就不闹了。……才怪。', '嘴边一圈白胡子。'] },
   };
-  const STOCK = { morning: ['coffee', 'toast', 'ball'], noon: ['bento', 'boba', 'ball'], evening: ['ball', 'soda', 'boba'], night: ['game', 'noodle', 'soda'] };
+  const STOCK = { morning: ['coffee', 'croissant', 'tennis'], noon: ['bento', 'cake', 'tennis'], evening: ['palette', 'boba', 'tennis'], night: ['slipper', 'noodle', 'milk'] };
   function pixSVG(it) {
     const rows = it.grid, cols = Math.max(...rows.map(r => r.length)), s = it.s;
     let rects = '';
@@ -622,7 +626,7 @@ body.five #crab .down { display: none; }
     o.el.style.pointerEvents = '';
     o.x = Math.max(40, Math.min(innerWidth - 40, crab.x + (crab.x > innerWidth / 2 ? -110 : 110)));
     o.y = Math.max(80, Math.min(innerHeight - 40, crab.y + 10)); place(o);
-    happy(); say('好吧，陪你。');
+    happy(); say(ITEMS[o.key].down || '好吧，陪你。');
   }
 
   // ---------------- 每一帧 ----------------
