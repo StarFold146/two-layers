@@ -274,6 +274,16 @@ body.five #crab .down { display: none; }
 #stage.shake { animation: shake 0.35s steps(4); }
 @keyframes shake { 25% { transform: translate(-5px, 2px); } 50% { transform: translate(5px, -2px); } 75% { transform: translate(-2px, -3px); } }
 #arena button:focus-visible { outline: 2px solid #e8c547; outline-offset: 2px; }
+/* 吃和喝：吃是一口一口咬，喝是举起来仰头 */
+#crab .blush { display: none; }
+#crab.blush .blush, #crab.blush .up { display: block; }
+#crab.blush .down { display: none; }
+#crab.chomp svg { transform: scale(1.05, 0.92); transition: transform 0.08s ease; }
+#crab.sip svg { transform: rotate(7deg); transform-origin: 50% 100%; }
+#crab.sip.gulp svg { transform: rotate(7deg) translateY(-2px) scale(0.98, 1.03); }
+.item.tilt svg { transform: rotate(-38deg); transform-origin: 50% 60%; transition: transform 0.3s ease; }
+.crumb { width: 4px; height: 4px; animation: crumb 0.6s ease-in forwards; }
+@keyframes crumb { to { transform: translate(var(--dx), 36px) rotate(90deg); opacity: 0; } }
 /* 更多动作：睡觉、跟着晃、贴到屏幕上 */
 #crab .shut { display: none; }
 #crab.sleep .shut { display: block; }
@@ -310,6 +320,7 @@ body.five #crab .down { display: none; }
     <g class="eye" fill="#1c1a19"><rect x="-3.5" y="-7.5" width="1" height="2"/><rect x="2.5" y="-7.5" width="1" height="2"/></g>
     <g class="grin" fill="#1c1a19"><rect x="-3.75" y="-6.5" width=".5" height=".5"/><rect x="-3.25" y="-7" width=".5" height=".5"/><rect x="-2.75" y="-6.5" width=".5" height=".5"/><rect x="2.25" y="-6.5" width=".5" height=".5"/><rect x="2.75" y="-7" width=".5" height=".5"/><rect x="3.25" y="-6.5" width=".5" height=".5"/></g>
     <g class="shut" fill="#1c1a19"><rect x="-3.9" y="-6.1" width="1.8" height=".5"/><rect x="2.1" y="-6.1" width="1.8" height=".5"/></g>
+    <g class="blush" fill="#f2a6bd" opacity=".85"><rect x="-5.4" y="-5.5" width="1.5" height=".6"/><rect x="3.9" y="-5.5" width="1.5" height=".6"/></g>
     <g class="acc bow"><rect x="-1.8" y="-3.7" width="1.3" height="1.4" fill="#d9534f"/><rect x="0.5" y="-3.7" width="1.3" height="1.4" fill="#d9534f"/><rect x="-0.5" y="-3.4" width="1" height=".8" fill="#a83b38"/></g>
     <g class="acc straw"><rect x="-3" y="-11.4" width="6" height="2" fill="#e8c56a"/><rect x="-3" y="-10.1" width="6" height=".5" fill="#c0504d"/><rect x="-5.2" y="-9.6" width="10.4" height=".75" fill="#d9b456"/></g>
     <g class="acc beret"><rect x="-4.2" y="-10.5" width="7.4" height="1.6" fill="#2f3b5c"/><rect x="2.6" y="-10.1" width="1.6" height="1" fill="#2f3b5c"/><rect x="-0.4" y="-11.1" width=".6" height=".7" fill="#2f3b5c"/></g>
@@ -540,6 +551,14 @@ body.five #crab .down { display: none; }
       say: ['珍珠卡在吸管里了。', '三分糖，懂我。', '吸——溜。'] },
     palette: { name: '调色板', s: 4, hold: true, grid: ['...wwwwww...', '.wwrwwwbwww.', 'wwwwwwwwwwyw', 'wgww..wwwwww', 'wwww..wwwpww', 'wwwwwwwwwwww', '.wwwwwwwww..', '...wwwww....'], col: { w: '#e6d3ad', r: '#d6455a', b: '#2f4b8a', y: '#f2c94c', g: '#7a9a6a', p: '#e8a0b0' },
       say: ['傍晚的水，调了三遍。', '这块深蓝留着夜里用。', '别动，你站在光里。'], down: '颜料没干，别碰。' },
+    toast: { name: '吐司', s: 4, grid: ['..bbbbbb..', '.bttttttb.', 'bttttttttb', 'bttyyyyttb', 'bttyyyyttb', 'bttttttttb', 'bttttttttb', 'bbbbbbbbbb'], col: { b: '#b8732f', t: '#f2c47a', y: '#fff1a8' },
+      say: ['咔嚓。', '黄油抹得刚好。', '边边也吃了。'] },
+    ball: { name: '篮球', s: 4, ball: true, grid: ['...oooo...', '.oooxoooo.', '.ooxoooxo.', 'oxxxxxxxxo', 'oooxoooxoo', 'oooxoooxoo', 'oxxxxxxxxo', '.ooxoooxo.', '.oooxooo..', '...oooo...'], col: { o: '#e07a2f', x: '#4a2614' },
+      say: ['看我三分。', '钳子运球，犯规吗。', '空心！……吧。'] },
+    soda: { name: '汽水', s: 4, grid: ['.ggggg.', 'rrrrrrr', 'rwwrwwr', 'rrrrrrr', 'rrwwwrr', 'rrrrrrr', 'rrrrrrr', '.rrrrr.'], col: { r: '#3a7ca5', w: '#f0f4f8', g: '#c9ced6' },
+      say: ['气泡冲到鼻子了。', '嗝。', '冰的，好。'] },
+    game: { name: '游戏机', s: 4, hold: true, grid: ['.gggggggggggg.', 'ggaggssssggbgg', 'gaaagssssgbgbg', 'ggaggssssggbgg', 'gggggssssggggg', '.gggggggggggg.'], col: { g: '#5b5f8a', a: '#22243a', s: '#9fd8c4', b: '#e0566b' },
+      say: ['来一局？', '敢不敢跟我打一场。', '再一局。就一局。'] },
     noodle: { name: '泡面', s: 4, grid: ['s..s..s..', '.s..s..s.', 'wwwwwwwww', 'rrrrrrrrr', '.wwwwwww.', '.wwrrrww.', '.wwwwwww.', '..wwwww..'], col: { s: 'rgba(255,255,255,.7)', w: '#f4efe7', r: '#d24b3c' },
       say: ['吸溜。', '夜里的泡面最香。', '汤也要喝完。'] },
     milk: { name: '热牛奶', s: 4, grid: ['...s...s...', '..s...s....', '...s...s...', '...........', '.wwwwwwww..', '.wkkkkkkwhh', '.wkkkkkkw.h', '.wkkkkkkwhh', '.wwwwwwww..', '..wwwwww...'], col: { s: 'rgba(255,255,255,.75)', w: '#9fb7d6', k: '#fbf7ef', h: '#9fb7d6' },
@@ -738,13 +757,38 @@ body.five #crab .down { display: none; }
     if (!atCenter() && Math.hypot(o.x - crab.x, o.y - crab.y) > 90) { busy = false; return; }
     if (it.ball) return dribble(o, it);
     if (it.hold) return hold(o, it);
-    // 吃掉 / 喝掉
-    o.x = crab.x + 30; o.y = crab.y - 40; place(o);
-    happy(2200);
-    let n = 0; const m = setInterval(() => { crabEl.classList.toggle('munch'); if (++n > 7) { clearInterval(m); crabEl.classList.remove('munch'); } }, 180);
-    say(pickOne(it.say));
-    setTimeout(() => { o.el.classList.add('gone'); }, 900);
-    setTimeout(() => { o.el.remove(); items = items.filter(i => i !== o); busy = false; respawn(); }, 1600);
+    // 吃：一口一口从靠它那边咬掉，渣往下掉；喝：举起来仰头，咕咚几下
+    const drink = ['coffee', 'boba', 'soda', 'milk'].includes(o.key);
+    o.el.style.pointerEvents = 'none'; crabEl.classList.add('blush');
+    say(pickOne(it.say), 2400);
+    const done = (ms) => setTimeout(() => {
+      o.el.classList.add('gone'); crabEl.classList.remove('blush', 'chomp', 'sip', 'gulp'); happy(1600);
+      puff('✦', 'zz', 1600);
+      setTimeout(() => { o.el.remove(); items = items.filter(i => i !== o); busy = false; respawn(); }, 500);
+    }, ms);
+    if (drink) {
+      o.x = crab.x + 50; o.y = crab.y - 66; place(o); look(o.x, o.y);
+      o.el.classList.add('tilt'); crabEl.classList.add('sip');
+      let n = 0; const m = setInterval(() => { crabEl.classList.toggle('gulp'); if (++n >= 6) clearInterval(m); }, 300);
+      done(2000);
+    } else {
+      o.x = crab.x + 58; o.y = crab.y - 58; place(o); look(o.x, o.y);
+      const cols = Object.values(it.col).filter(c => c[0] === '#');
+      let n = 0; const m = setInterval(() => {
+        crabEl.classList.toggle('chomp', n % 2 === 0);
+        if (n % 2 === 0) {
+          const k = Math.min(1, (n / 2 + 1) * 0.2); o.el.style.clipPath = `inset(0 0 0 ${k * 100}%)`;
+          for (let i = 0; i < 3; i++) {
+            const c = document.createElement('div'); c.className = 'fx crumb'; c.style.background = pickOne(cols);
+            c.style.setProperty('--dx', rnd(-14, 10) + 'px');
+            c.style.left = (o.x - o.w / 2 + o.w * k + rnd(-4, 2)) + 'px'; c.style.top = (o.y + rnd(-6, 6)) + 'px';
+            document.body.appendChild(c); setTimeout(() => c.remove(), 650);
+          }
+        }
+        if (++n >= 9) clearInterval(m);
+      }, 220);
+      done(2100);
+    }
     if (++fed >= 3) { fed = 0; setTimeout(() => { if (busy || away) return; say('吃饱了。', 1500); setTimeout(() => pressFace('吃饱了，来贴贴。'), 1300); }, 1900); }
   }
   function respawn() {
@@ -1022,7 +1066,7 @@ body.five #crab .down { display: none; }
     const svg = crabEl.querySelector('svg').cloneNode(true);
     const has = (k) => crabEl.classList.contains('w-' + k);
     svg.querySelectorAll('.acc').forEach(g => { const k = [...g.classList].find(c => c !== 'acc'); if (!has(k)) g.remove(); });
-    svg.querySelectorAll('.letter, .flag, .bump, .grin, .shut').forEach(n => n.remove());
+    svg.querySelectorAll('.letter, .flag, .bump, .grin, .shut, .blush').forEach(n => n.remove());
     svg.querySelectorAll(has('sci') || has('wizard') ? '.down' : '.up').forEach(n => n.remove());
     if (has('shades') || crabEl.classList.contains('bare')) svg.querySelectorAll('.glasses').forEach(n => n.remove());
     if (has('shades')) svg.querySelectorAll('.eye').forEach(n => n.remove());
