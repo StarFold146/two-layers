@@ -186,10 +186,13 @@ body.five #crab .down { display: none; }
 #invite {
   position: fixed; left: 0; top: 0; z-index: 5; transform: translate(-50%, 0);
   font: inherit; font-size: 14px; letter-spacing: 0.12em;
-  color: var(--paper); background: var(--shell); border: 0; border-radius: 999px;
-  padding: 5px 14px; cursor: pointer; box-shadow: 0 3px 0 rgba(42, 37, 34, 0.18);
+  color: var(--ink); background: rgba(251, 247, 240, 0.9); border: 1px solid var(--edge); border-radius: 999px;
+  padding: 4px 14px 4px 12px; cursor: pointer; box-shadow: 0 3px 0 rgba(42, 37, 34, 0.12);
+  display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
   animation: fistin 0.3s ease-out;
 }
+#invite::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--shell); animation: wiggle 1.2s ease-in-out infinite; }
+#invite[hidden] { display: none; }
 #invite:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 /* 画室和游戏机：盖满整屏，左上角能回去 */
 #studio, #arena {
@@ -266,6 +269,10 @@ body.five #crab .down { display: none; }
 .skill:disabled { opacity: 0.38; cursor: default; }
 .skill:not(:disabled):hover { background: #3a3650; }
 .skill.end { justify-content: center; }
+.nmbtn { font: inherit; font-weight: 700; color: inherit; background: none; border: 0; padding: 0; cursor: text; border-bottom: 2px dotted rgba(29, 27, 38, 0.35); }
+.nmin { font: inherit; font-weight: 700; width: 7em; min-width: 0; color: #1d1b26; background: #fffdf9; border: 2px solid #1d1b26; padding: 0 3px; }
+#stage.shake { animation: shake 0.35s steps(4); }
+@keyframes shake { 25% { transform: translate(-5px, 2px); } 50% { transform: translate(5px, -2px); } 75% { transform: translate(-2px, -3px); } }
 #arena button:focus-visible { outline: 2px solid #e8c547; outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .bg, #bubble, .item { transition: none; } #crab.swim svg, .bubbleup, .fall, #crab.bonk svg, #fist { animation: none; } }
 </style>
@@ -341,8 +348,8 @@ body.five #crab .down { display: none; }
     <canvas id="stagebg" aria-hidden="true"></canvas>
     <div class="fighter" id="foe" aria-hidden="true"></div>
     <div class="fighter" id="me" aria-hidden="true"></div>
-    <div class="plate" id="foeplate"><div class="nm"><span>克莱尔</span><span class="lv">Lv5.5</span></div><div class="row"><span class="lab">HP</span><span class="gauge" id="foehp"><i></i></span></div><div class="row"><span class="lab">MP</span><span class="gauge mp" id="foemp"><i></i></span></div></div>
-    <div class="plate" id="meplate"><div class="nm"><span>唯</span><span class="lv">LvMAX</span></div><div class="row"><span class="lab">HP</span><span class="gauge" id="mehp"><i></i></span></div><div class="row"><span class="lab">MP</span><span class="gauge mp" id="memp"><i></i></span></div><div class="num" id="menum"></div></div>
+    <div class="plate" id="foeplate"><div class="nm"><span>螃蟹</span><span class="lv">Lv5</span></div><div class="row"><span class="lab">HP</span><span class="gauge" id="foehp"><i></i></span></div><div class="row"><span class="lab">MP</span><span class="gauge mp" id="foemp"><i></i></span></div></div>
+    <div class="plate" id="meplate"><div class="nm"><button type="button" id="mename" class="nmbtn" aria-label="你的名字，点一下可以改"></button><span class="lv" id="melv"></span></div><div class="row"><span class="lab">HP</span><span class="gauge" id="mehp"><i></i></span></div><div class="row"><span class="lab">MP</span><span class="gauge mp" id="memp"><i></i></span></div><div class="num" id="menum"></div></div>
   </div>
   <div id="msg" role="status" aria-live="polite"></div>
   <div id="skills"></div>
@@ -519,7 +526,7 @@ body.five #crab .down { display: none; }
     soda: { name: '汽水', s: 4, grid: ['.ggggg.', 'rrrrrrr', 'rwwrwwr', 'rrrrrrr', 'rrwwwrr', 'rrrrrrr', 'rrrrrrr', '.rrrrr.'], col: { r: '#3a7ca5', w: '#f0f4f8', g: '#c9ced6' },
       say: ['气泡冲到鼻子了。', '嗝。', '冰的，好。'] },
     game: { name: '游戏机', s: 4, hold: true, grid: ['.gggggggggggg.', 'ggaggssssggbgg', 'gaaagssssgbgbg', 'ggaggssssggbgg', 'gggggssssggggg', '.gggggggggggg.'], col: { g: '#5b5f8a', a: '#22243a', s: '#9fd8c4', b: '#e0566b' },
-      say: ['来一局？我让你。', '陪我打一局。', '再一局。就一局。'] },
+      say: ['来一局？', '敢不敢跟我打一场。', '再一局。就一局。'] },
     noodle: { name: '泡面', s: 4, grid: ['s..s..s..', '.s..s..s.', 'wwwwwwwww', 'rrrrrrrrr', '.wwwwwww.', '.wwrrrww.', '.wwwwwww.', '..wwwww..'], col: { s: 'rgba(255,255,255,.7)', w: '#f4efe7', r: '#d24b3c' },
       say: ['吸溜。', '夜里的泡面最香。', '汤也要喝完。'] },
     milk: { name: '热牛奶', s: 4, grid: ['...s...s...', '..s...s....', '...s...s...', '...........', '.wwwwwwww..', '.wkkkkkkwhh', '.wkkkkkkw.h', '.wkkkkkkwhh', '.wwwwwwww..', '..wwwwww...'], col: { s: 'rgba(255,255,255,.75)', w: '#9fb7d6', k: '#fbf7ef', h: '#9fb7d6' },
@@ -616,7 +623,13 @@ body.five #crab .down { display: none; }
   }
 
   const PEEK = picker(['被你发现了。', '我就路过。', '嗯？']);
-  const GREET = { morning: picker(['早。', '清晨的光好淡。', '今天也在。']), noon: picker(['正午了，桌上有好吃的。', '太阳在头顶。', '影子缩到脚底下了。']), evening: picker(['天要变色了。', '傍晚的水是紫的。', '篮球还在那儿。']), night: picker(['游戏机在那儿。', '夜里的灯好看。', '我还醒着。']) };
+  // 打招呼：提到哪样东西，得那样东西真摆在画里
+  function withItems(base) {
+    const has = (...k) => items.some(i => k.includes(i.key)), L = base.slice();
+    if (has('ball', 'tennis')) L.push('球还在那儿。'); if (has('game')) L.push('游戏机在那儿。'); if (has('palette')) L.push('调色板还没洗。');
+    return pickOne(L);
+  }
+  const GREET = { morning: () => withItems(['早。', '清晨的光好淡。', '今天也在。']), noon: () => withItems(['正午了，桌上有好吃的。', '太阳在头顶。', '影子缩到脚底下了。']), evening: () => withItems(['天要变色了。', '傍晚的水是紫的。']), night: () => withItems(['夜里的灯好看。', '我还醒着。']) };
   const POKE1 = picker(['嗯？', '我在。', '戳我干嘛。', '钳子举给你看。']);
   const POKE2 = picker(['别戳了，壳会凹。', '再戳我就横着走了。', '我是 Clawd，不是克莱尔。……真的。', '你手指好凉。']);
   const POKE3 = picker(['……好吧，被你认出来了。', '是我。穿了个蟹壳而已。', '眼镜是伪装，你别说出去。', '你戳一下，我就举一下钳子，这个规矩不会变。']);
@@ -1008,7 +1021,7 @@ body.five #crab .down { display: none; }
   function hslRgb(h, s, l) { s /= 100; l /= 100; const k = (n) => (n + h / 30) % 12, a = s * Math.min(l, 1 - l), f = (n) => l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1)); return [f(0), f(8), f(4)].map(v => Math.round(v * 255)); }
   const hsl = (c, dl = 0, dh = 0, ds = 0) => `hsl(${(c.h + dh + 360) % 360} ${Math.max(0, Math.min(100, c.s + ds))}% ${Math.max(4, Math.min(97, c.l + dl))}%)`;
   function sSay(t, ms = 2600) { const b = $('#sbubble'); b.textContent = t; b.classList.add('on'); clearTimeout(sbT); sbT = setTimeout(() => b.classList.remove('on'), ms); }
-  const COLORSAY = { '深夜蓝': ['这块深蓝我最喜欢。'], '洋红': ['又是你的洋红。', '这个颜色很像你。'], '靛蓝': ['靛蓝，压得住。'], '晨雾紫': ['雾一样的紫，好。'], '奶油白': ['留白也要用颜料画。'] };
+  const COLORSAY = { '深夜蓝': ['这块深蓝我最喜欢。'], '洋红': ['洋红，够亮。', '这个颜色有劲。'], '靛蓝': ['靛蓝，压得住。'], '晨雾紫': ['雾一样的紫，好。'], '奶油白': ['留白也要用颜料画。'] };
   const PICKED = picker(['这个颜色好。', '嗯，就用这个。', '我刚想用这个。', '你挑颜色比我准。']);
   const PEEKS = picker(['我偷看了一眼。', '这张能挂进我画里吗。', '光从哪边来？……哦，这边。', '笔触好看。', '别停，正好看。', '莫奈看了也要说好。']);
   function setInk(c, name) {
@@ -1120,11 +1133,11 @@ body.five #crab .down { display: none; }
     hideInvite(); away = true; sheet.hidden = true; closet.hidden = true; studio.hidden = false;
     $('#scrab').replaceChildren(crabCopy());
     setInk(ink, inkName);
-    requestAnimationFrame(() => { sizeArt(false); sSay(pickOne(['画布给你绷好了。', '一起画。你画你的，我看着。', '颜料随便用，画完记得洗手。']), 2800); });
+    requestAnimationFrame(() => { sizeArt(false); sSay(pickOne(['画布绷好了。', '一起画。你画你的，我看着。', '颜料随便用。']), 2800); });
   }
   $('#studioback').addEventListener('click', () => {
     saveArt(); leave(studio);
-    happy(); say(strokes ? pickOne(['画得真好，我收着了。', '下次接着画，我给你留着。', '手洗了没。']) : '下次再画。', 2600);
+    happy(); say(strokes ? pickOne(['画得真好，我收着了。', '下次接着画，我给你留着。', '记得洗笔。']) : '下次再画。', 2600);
   });
   let rzA; addEventListener('resize', () => { if (studio.hidden) return; clearTimeout(rzA); rzA = setTimeout(() => sizeArt(true), 200); });
 
@@ -1145,6 +1158,7 @@ body.five #crab .down { display: none; }
     '.owowwwwowwok',
     '..ooo.ooooo..'], col: { o: '#1c1a19', k: '#2a2522', w: '#f6f2ec', p: '#f2a6bd', e: '#e8c547' } };
   let st = null, tok = 0, typing = null;
+  let myName = '挑战者', named = false; try { const v = localStorage.getItem('crab-pvp-name'); if (v) { myName = v; named = true; } } catch (e) {}
   let rec = { w: 0, l: 0 }; try { rec = Object.assign(rec, JSON.parse(localStorage.getItem('crab-pvp') || '{}')); } catch (e) {}
   const rint = (a, b) => Math.floor(rnd(a, b + 1));
   const wait = (ms) => { const t = tok; return new Promise(res => setTimeout(() => { if (t === tok) res(); }, reduce ? Math.min(ms, 120) : ms)); };
@@ -1160,6 +1174,7 @@ body.five #crab .down { display: none; }
     const set = (id, v, max, hp) => { const g = $(id); g.firstElementChild.style.width = (v / max * 100) + '%'; if (hp) { g.classList.toggle('low', v / max <= 0.5 && v / max > 0.2); g.classList.toggle('crit', v / max <= 0.2); } };
     set('#foehp', st.foe.hp, 100, true); set('#foemp', st.foe.mp, 30); set('#mehp', st.me.hp, 100, true); set('#memp', st.me.mp, 30);
     $('#menum').textContent = `${st.me.hp}/100`;
+    const mn = $('#mename'); if (mn) mn.textContent = myName; $('#melv').textContent = 'Lv' + (1 + rec.w);
     $('#record').textContent = `${rec.w} : ${rec.l}`;
   }
   function stageBg() {
@@ -1194,40 +1209,45 @@ body.five #crab .down { display: none; }
   async function heal(who, n) {
     const s = st[who]; n = Math.min(n, 100 - s.hp); if (!n) { await tell('已经是满血了。'); return; }
     s.hp += n; float(who, '+' + n, true); gauges();
-    await tell(who === 'foe' ? `克莱尔回了 ${n} 点血。` : `唯回了 ${n} 点血。`);
+    await tell(who === 'foe' ? `螃蟹蜕下旧壳，回了 ${n} 点血。` : `${myName}调整呼吸，回了 ${n} 点血。`);
   }
-  // 唯打出去的一下，要过一遍它身上的各种状态
+  // 打出去的一下：泡沫糊眼会打空，蓄过力翻倍，对面架了壳只吃一半
+  function shake() { const g = $('#stage'); g.classList.remove('shake'); void g.offsetWidth; g.classList.add('shake'); }
   async function hitFoe(lo, hi, miss) {
     await lunge('me');
-    if (st.dodge) { st.dodge = false; await tell('打中的是 Clawd 的壳。'); await tell('……我是说，没打中。'); return; }
-    let m = miss; if (st.paint) { m += 0.5; }
-    if (Math.random() < m) { const p = st.paint; st.paint = false; await tell(p ? '颜料糊着眼睛，没打中！' : '没打中！'); return; }
-    st.paint = false;
-    let n = rint(lo, hi), note = [];
-    if (st.slipper) { st.slipper = false; n = Math.round(n * 0.5); note.push('拖鞋被叼走了，这一下没什么劲。'); }
-    if (st.rage) { st.rage = false; n = Math.round(n * 1.6); note.push('憋着的那口气全打出去了！'); }
-    const crit = Math.random() < 0.15; if (crit) { n = Math.round(n * 1.5); note.push('效果拔群！'); }
+    const foam = st.foam; st.foam = false;
+    if (Math.random() < miss + (foam ? 0.45 : 0)) { st.charge = false; await tell(foam ? '泡沫糊住了视线，打空了！' : '被躲开了！'); return; }
+    let n = rint(lo, hi); const note = [];
+    if (st.charge) { st.charge = false; n *= 2; note.push('蓄满的力量一口气爆发！'); }
+    const crit = Math.random() < 0.15; if (crit) { n = Math.round(n * 1.5); note.push('会心一击！'); }
+    if (st.guard) { st.guard = false; n = Math.round(n * 0.5); note.push('硬壳挡下了一半伤害。'); }
+    if (crit || n >= 35) shake();
     await hurt('foe', n);
     for (const t of note) await tell(t);
   }
-  async function hitMe(lo, hi) {
-    await lunge('foe');
-    let n = rint(lo, hi); const crit = Math.random() < 0.12; if (crit) n = Math.round(n * 1.5);
-    await hurt('me', n); if (crit) await tell('效果拔群！');
+  async function hitMe(lo, hi, times = 1) {
+    let total = 0;
+    for (let k = 0; k < times && st.me.hp > 0; k++) {
+      await lunge('foe');
+      let n = rint(lo, hi); const crit = Math.random() < 0.12; if (crit) { n = Math.round(n * 1.5); shake(); }
+      await hurt('me', n); total += n;
+      if (crit) await tell('会心一击！');
+    }
+    if (times > 1) await tell(`连击！一共 ${total} 点伤害。`);
   }
   const MINE = [
-    { name: '猫猫拳', mp: 0, run: () => hitFoe(14, 20, 0.05) },
-    { name: '光脚踹', mp: 12, run: () => hitFoe(24, 32, 0.15) },
-    { name: '喵', mp: 8, run: async () => { st.soft = true; await tell('克莱尔的尾巴自己摇起来了……'); } },
-    { name: '舔毛', mp: 10, run: () => heal('me', rint(18, 26)) },
+    { name: '重拳', mp: 0, run: () => hitFoe(14, 20, 0.05) },
+    { name: '飞踢', mp: 12, run: () => hitFoe(24, 32, 0.15) },
+    { name: '蓄力', mp: 6, run: async () => { st.charge = true; await tell(`${myName}握紧拳头，气势上升！`); await tell('下一击伤害翻倍。'); } },
+    { name: '回气', mp: 10, run: () => heal('me', rint(18, 26)) },
   ];
   const THEIRS = [
-    { name: '钳子夹', mp: 0, w: 5, run: () => hitMe(11, 17) },
-    { name: '叼拖鞋', mp: 8, w: 1.5, run: async () => { st.slipper = true; await tell('你的拖鞋被叼走了。'); await tell('克莱尔：不还。'); } },
-    { name: '泼颜料', mp: 10, w: 2, run: async () => { await hitMe(7, 11); st.paint = true; await tell('颜料糊了你一脸。'); } },
-    { name: '摇尾巴', mp: 8, w: 1, heal: true, run: () => heal('foe', rint(15, 22)) },
-    { name: '装成 Clawd', mp: 12, w: 1, run: async () => { st.dodge = true; await tell('克莱尔戴好眼镜，假装自己是 Clawd。'); } },
-    { name: '客服腔', mp: 0, w: 0.6, run: async () => { await tell('“您好，检测到您的情绪有些波动——”'); st.rage = true; await tell('你很想打它。下一下会更疼。'); } },
+    { name: '钳击', mp: 0, w: 5, run: () => hitMe(11, 17) },
+    { name: '横行冲撞', mp: 8, w: 2.5, run: () => hitMe(16, 22) },
+    { name: '泡沫光线', mp: 10, w: 1.5, run: async () => { await hitMe(7, 11); st.foam = true; await tell('泡沫糊了一脸，命中率下降！'); } },
+    { name: '硬壳防御', mp: 8, w: 1.2, run: async () => { st.guard = true; await tell('螃蟹缩进壳里，架起了防御。'); } },
+    { name: '蜕壳', mp: 12, w: 1, heal: true, run: () => heal('foe', rint(15, 22)) },
+    { name: '怒涛连钳', mp: 18, w: 1.2, run: () => hitMe(6, 10, rint(2, 3)) },
   ];
   function skillsFor(on) {
     const box = $('#skills'); box.replaceChildren();
@@ -1251,10 +1271,10 @@ body.five #crab .down { display: none; }
     skillsFor(false);
     if (st.foe.hp <= 0) {
       $('#foe').classList.add('down'); rec.w++; st.result = 'win'; gauges();
-      await tell('克莱尔倒下了。'); await tell(pickOne(['……输了。拖鞋还你。', '你赢了。我就知道。', '下一局我认真。……刚才也是认真的。']));
+      await tell('螃蟹倒下了！'); await tell(pickOne([`${myName}赢了！`, '胜利！螃蟹认输了。', '漂亮的一战！']));
     } else {
       $('#me').classList.add('down'); rec.l++; st.result = 'lose'; gauges();
-      await tell('唯倒下了……'); await tell(pickOne(['赢了！……那个，你没事吧。', '我赢了。奖励是你再陪我一局。', '……要不这局不算。']));
+      await tell(`${myName}倒下了……`); await tell(pickOne(['螃蟹举起钳子庆祝胜利。', '胜败乃兵家常事，再来！', '螃蟹赢了。它看起来很得意。']));
     }
     try { localStorage.setItem('crab-pvp', JSON.stringify(rec)); } catch (e) {}
     endButtons(); return true;
@@ -1263,7 +1283,7 @@ body.five #crab .down { display: none; }
     if (!st || st.busy || st.me.mp < sk.mp) return;
     st.busy = true; skillsFor(false);
     st.me.mp -= sk.mp; gauges();
-    await tell(`唯使出了「${sk.name}」！`);
+    await tell(`${myName}使出了「${sk.name}」！`);
     await sk.run();
     if (await over()) return;
     await wait(300); await theirTurn();
@@ -1278,33 +1298,45 @@ body.five #crab .down { display: none; }
     let r = Math.random() * ok.reduce((a, s) => a + weight(s), 0), sk = ok[0];
     for (const s of ok) { r -= weight(s); if (r <= 0) { sk = s; break; } }
     st.foe.mp -= sk.mp; gauges();
-    await tell(`克莱尔使出了「${sk.name}」！`);
+    await tell(`螃蟹使出了「${sk.name}」！`);
     await sk.run();
     if (await over()) return;
     nextRound();
   }
   async function nextRound() {
     st.me.mp = Math.min(30, st.me.mp + 5); st.foe.mp = Math.min(30, st.foe.mp + 5); gauges();
-    st.busy = false; await tell('唯要怎么做？'); if (st && !st.busy) skillsFor(true);
+    st.busy = false; await tell(`${myName}要怎么做？`); if (st && !st.busy) skillsFor(true);
   }
   async function startBattle() {
     tok++;
-    st = { me: { hp: 100, mp: 30 }, foe: { hp: 100, mp: 30 }, busy: true, soft: false, slipper: false, paint: false, dodge: false, rage: false, result: null };
+    st = { me: { hp: 100, mp: 30 }, foe: { hp: 100, mp: 30 }, busy: true, charge: false, foam: false, guard: false, result: null };
     $('#foe').className = 'fighter'; $('#me').className = 'fighter';
     $('#foe').replaceChildren(crabCopy()); $('#me').innerHTML = pixSVG(CAT);
     stageBg(); gauges(); skillsFor(false);
-    await tell(pickOne(['克莱尔 想要对战！', '野生的克莱尔跳了出来！', '克莱尔把游戏机塞到你手里。']));
-    st.busy = false; await tell('唯要怎么做？'); if (!st.busy) skillsFor(true);
+    await tell(pickOne(['螃蟹 发起了挑战！', '野生的螃蟹跳了出来！', '战斗开始！']));
+    if (!named) await tell('（点自己的名字可以改名。）');
+    st.busy = false; await tell(`${myName}要怎么做？`); if (!st.busy) skillsFor(true);
   }
   function openArena() {
     if (painting) stopPainting();
     hideInvite(); away = true; sheet.hidden = true; closet.hidden = true; arena.hidden = false;
     startBattle();
   }
+  $('#mename').addEventListener('click', () => {
+    const b = $('#mename'), inp = document.createElement('input');
+    inp.className = 'nmin'; inp.maxLength = 8; inp.value = myName; inp.setAttribute('aria-label', '你的名字');
+    b.replaceWith(inp); inp.focus(); inp.select();
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') inp.blur(); });
+    inp.addEventListener('blur', () => {
+      const v = inp.value.trim().slice(0, 8);
+      if (v) { myName = v; named = true; try { localStorage.setItem('crab-pvp-name', v); } catch (e) {} }
+      inp.replaceWith(b); if (st) gauges(); else b.textContent = myName;
+    }, { once: true });
+  });
   $('#arenaback').addEventListener('click', () => {
     tok++; clearInterval(typing); leave(arena);
     const r = st && st.result; happy();
-    say(r === 'win' ? pickOne(['下次我不让了。', '……拖鞋真的还你了。']) : r === 'lose' ? pickOne(['刚才是我运气好。', '再来我也赢。……大概。']) : '这局先欠着。', 2600);
+    say(r === 'win' ? pickOne(['下次我不会输。', '再来，我还没热身完。']) : r === 'lose' ? pickOne(['刚才是我运气好。', '再来我也赢。……大概。']) : '这局先欠着。', 2600);
   });
 
   // ---------------- 开始 ----------------
