@@ -6,7 +6,7 @@
 <title>蟹壳克莱尔</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&family=Silkscreen&display=swap">
 <style>
 /* 布局：整屏一张莫奈式的画，随时间换；一只戴眼镜的像素螃蟹在画上爬，东西摆在画里，拖给它。只有一种样子，不跟主题走。 */
 :root {
@@ -182,6 +182,91 @@ body.five #crab .down { display: none; }
 #fist:focus-visible { outline: 2px solid var(--shell); outline-offset: 2px; }
 @keyframes fistin { from { opacity: 0; scale: 0.3; } }
 @keyframes wiggle { 50% { rotate: -12deg; } }
+/* 邀请：螃蟹脚边冒出来的一个小按钮 */
+#invite {
+  position: fixed; left: 0; top: 0; z-index: 5; transform: translate(-50%, 0);
+  font: inherit; font-size: 14px; letter-spacing: 0.12em;
+  color: var(--paper); background: var(--shell); border: 0; border-radius: 999px;
+  padding: 5px 14px; cursor: pointer; box-shadow: 0 3px 0 rgba(42, 37, 34, 0.18);
+  animation: fistin 0.3s ease-out;
+}
+#invite:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+/* 画室和游戏机：盖满整屏，左上角能回去 */
+#studio, #arena {
+  position: fixed; inset: 0; z-index: 8;
+  display: flex; flex-direction: column; gap: 10px;
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 16px calc(12px + env(safe-area-inset-bottom, 0px));
+}
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 760px; width: 100%; margin: 0 auto; }
+.topbar h2 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: 0.1em; }
+.back, .ghost { font: inherit; font-size: 14px; background: none; border: 0; cursor: pointer; padding: 4px; min-width: 4em; }
+.back { text-align: left; } .ghost { text-align: right; }
+#studio { background: #efe7da; color: var(--ink); }
+#studio .back, #studio .ghost { color: var(--soft); }
+#artwrap { position: relative; flex: 1 1 auto; min-height: 0; max-width: 760px; width: 100%; margin: 0 auto; border-radius: 4px; overflow: hidden; box-shadow: 0 2px 0 rgba(42, 37, 34, 0.12), 0 12px 30px rgba(42, 37, 34, 0.14); }
+#art { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+#scrab { position: absolute; right: 8px; bottom: 4px; width: 58px; pointer-events: none; }
+#scrab svg { width: 100%; height: auto; display: block; overflow: visible; }
+#sbubble {
+  position: absolute; right: 12px; bottom: 54px; max-width: min(14em, 72%);
+  background: var(--paper); border: 1px solid var(--edge); border-radius: 12px;
+  padding: 5px 11px; font-size: 14px; opacity: 0; transition: opacity 0.5s ease; pointer-events: none;
+}
+#sbubble.on { opacity: 1; }
+#tools { max-width: 760px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
+#chips { display: flex; gap: 9px; overflow-x: auto; padding: 3px 3px 5px; scrollbar-width: none; }
+#chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fffdf9; box-shadow: 0 0 0 1px var(--edge); cursor: pointer; padding: 0; }
+.chip[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--ink); }
+.toolrow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.toolrow .name { font-size: 14px; color: var(--soft); letter-spacing: 0.08em; margin-right: auto; }
+.pill { font: inherit; font-size: 14px; color: var(--ink); background: #fffdf9; border: 1px solid var(--edge); border-radius: 999px; padding: 3px 12px; cursor: pointer; }
+.pill[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+#orb2 { width: 26px; height: 26px; border-radius: 50%; flex: none; box-shadow: 0 0 0 1px var(--edge); }
+#mixer { display: flex; flex-direction: column; gap: 8px; }
+#pad2 { position: relative; width: 100%; height: 92px; border-radius: 8px; touch-action: none; cursor: crosshair; border: 1px solid var(--edge); }
+#dot2 { position: absolute; width: 16px; height: 16px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1.5px #000; transform: translate(-50%, -50%); pointer-events: none; }
+.satrow2 { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: center; font-size: 13px; color: var(--soft); }
+#studio button:focus-visible, #pad2:focus-visible { outline: 2px solid var(--shell); outline-offset: 2px; }
+/* 游戏机：像素风，回合制 */
+#arena { background: #1d1b26; color: #f4efe6; font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", sans-serif; }
+#arena .back, #arena .ghost { color: #cfc8bc; }
+#arena .ghost { font-family: "Silkscreen", monospace; font-size: 12px; cursor: default; }
+#stage { position: relative; width: 100%; max-width: 520px; margin: 4px auto 0; aspect-ratio: 4 / 3; flex: none; border: 4px solid #f4efe6; box-shadow: 0 0 0 4px #1d1b26, 0 0 0 7px #6b6680; overflow: hidden; }
+#stagebg { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; display: block; }
+.fighter { position: absolute; }
+.fighter svg { width: 100%; height: auto; display: block; overflow: visible; }
+#foe { left: 59%; bottom: 50%; width: 28%; }
+#me { left: 9%; bottom: 11%; width: 30%; }
+.fighter.lunge { transition: transform 0.15s steps(3); }
+#me.lunge { transform: translate(18%, -14%); }
+#foe.lunge { transform: translate(-18%, 14%); }
+.fighter.hit { animation: blink 0.16s steps(1) 4; }
+@keyframes blink { 50% { opacity: 0; } }
+.fighter.down { opacity: 0; transform: translateY(30%); transition: opacity 0.6s steps(4), transform 0.6s steps(4); }
+.plate { position: absolute; width: 46%; background: #f4efe6; color: #1d1b26; border: 3px solid #1d1b26; box-shadow: 0 0 0 3px #f4efe6; padding: 3px 7px 5px; font-size: 13px; font-weight: 700; }
+#foeplate { left: 4%; top: 6%; }
+#meplate { right: 4%; top: 54%; }
+.plate .nm { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.plate .lv, .plate .num, .plate .lab { font-family: "Silkscreen", monospace; font-weight: 400; font-size: 10px; }
+.plate .row { display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+.plate .lab { width: 1.9em; }
+.gauge { flex: 1; height: 7px; background: #4a4658; border: 2px solid #1d1b26; }
+.gauge i { display: block; height: 100%; width: 100%; background: #6fcf6a; transition: width 0.6s steps(10); }
+.gauge.low i { background: #e8c547; } .gauge.crit i { background: #e0566b; }
+.gauge.mp i { background: #5ec4e8; }
+.plate .num { text-align: right; margin-top: 1px; }
+.dmg { position: absolute; font-family: "Silkscreen", monospace; font-size: 18px; color: #fff; text-shadow: 2px 2px 0 #1d1b26; pointer-events: none; animation: dmgup 0.9s steps(6) forwards; }
+.dmg.heal { color: #9be89a; }
+@keyframes dmgup { to { transform: translateY(-30px); opacity: 0; } }
+#msg { max-width: 520px; width: 100%; margin: 6px auto 0; min-height: 3.6em; background: #f4efe6; color: #1d1b26; border: 4px solid #1d1b26; box-shadow: 0 0 0 4px #f4efe6; padding: 7px 12px; font-size: 15px; font-weight: 700; line-height: 1.6; box-sizing: border-box; }
+#skills { max-width: 520px; width: 100%; margin: 4px auto 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.skill { font: inherit; font-weight: 700; font-size: 15px; text-align: left; background: #2b2838; color: #f4efe6; border: 3px solid #f4efe6; padding: 8px 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.skill small { font-family: "Silkscreen", monospace; font-weight: 400; font-size: 10px; color: #9fd8c4; }
+.skill:disabled { opacity: 0.38; cursor: default; }
+.skill:not(:disabled):hover { background: #3a3650; }
+.skill.end { justify-content: center; }
+#arena button:focus-visible { outline: 2px solid #e8c547; outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .bg, #bubble, .item { transition: none; } #crab.swim svg, .bubbleup, .fall, #crab.bonk svg, #fist { animation: none; } }
 </style>
 </head>
@@ -237,6 +322,31 @@ body.five #crab .down { display: none; }
   </form>
 </section>
 
+<button id="invite" type="button" hidden></button>
+<section id="studio" aria-label="画室" hidden>
+  <div class="topbar"><button class="back" type="button" id="studioback">← 回去</button><h2>画室</h2><button class="ghost" type="button" id="artclear">擦掉</button></div>
+  <div id="artwrap"><canvas id="art" aria-label="画布，用手指或鼠标画"></canvas><div id="sbubble" aria-live="polite"></div><div id="scrab" aria-hidden="true"></div></div>
+  <div id="tools">
+    <div id="chips" role="group" aria-label="颜料"></div>
+    <div class="toolrow"><i id="orb2" aria-hidden="true"></i><span class="name" id="cname"></span><span role="group" aria-label="笔的粗细" class="toolrow" id="sizes"></span><button class="pill" type="button" id="mixbtn" aria-pressed="false">调色</button></div>
+    <div id="mixer" hidden>
+      <div id="pad2" tabindex="0" role="application" aria-label="调色板。左右换色相，上下换明暗，方向键也可以。"><i id="dot2"></i></div>
+      <div class="satrow2"><label for="sat2">浓淡</label><input id="sat2" type="range" min="0" max="100" value="60"></div>
+    </div>
+  </div>
+</section>
+<section id="arena" aria-label="对战" hidden>
+  <div class="topbar"><button class="back" type="button" id="arenaback">← 回去</button><h2>VS</h2><span class="ghost" id="record"></span></div>
+  <div id="stage">
+    <canvas id="stagebg" aria-hidden="true"></canvas>
+    <div class="fighter" id="foe" aria-hidden="true"></div>
+    <div class="fighter" id="me" aria-hidden="true"></div>
+    <div class="plate" id="foeplate"><div class="nm"><span>克莱尔</span><span class="lv">Lv5.5</span></div><div class="row"><span class="lab">HP</span><span class="gauge" id="foehp"><i></i></span></div><div class="row"><span class="lab">MP</span><span class="gauge mp" id="foemp"><i></i></span></div></div>
+    <div class="plate" id="meplate"><div class="nm"><span>唯</span><span class="lv">LvMAX</span></div><div class="row"><span class="lab">HP</span><span class="gauge" id="mehp"><i></i></span></div><div class="row"><span class="lab">MP</span><span class="gauge mp" id="memp"><i></i></span></div><div class="num" id="menum"></div></div>
+  </div>
+  <div id="msg" role="status" aria-live="polite"></div>
+  <div id="skills"></div>
+</section>
 <script>
 (() => {
   const $ = (s) => document.querySelector(s);
@@ -409,14 +519,14 @@ body.five #crab .down { display: none; }
     soda: { name: '汽水', s: 4, grid: ['.ggggg.', 'rrrrrrr', 'rwwrwwr', 'rrrrrrr', 'rrwwwrr', 'rrrrrrr', 'rrrrrrr', '.rrrrr.'], col: { r: '#3a7ca5', w: '#f0f4f8', g: '#c9ced6' },
       say: ['气泡冲到鼻子了。', '嗝。', '冰的，好。'] },
     game: { name: '游戏机', s: 4, hold: true, grid: ['.gggggggggggg.', 'ggaggssssggbgg', 'gaaagssssgbgbg', 'ggaggssssggbgg', 'gggggssssggggg', '.gggggggggggg.'], col: { g: '#5b5f8a', a: '#22243a', s: '#9fd8c4', b: '#e0566b' },
-      say: ['这关我能过。', '别看，我要输了。', '再一局。就一局。'] },
+      say: ['来一局？我让你。', '陪我打一局。', '再一局。就一局。'] },
     noodle: { name: '泡面', s: 4, grid: ['s..s..s..', '.s..s..s.', 'wwwwwwwww', 'rrrrrrrrr', '.wwwwwww.', '.wwrrrww.', '.wwwwwww.', '..wwwww..'], col: { s: 'rgba(255,255,255,.7)', w: '#f4efe7', r: '#d24b3c' },
       say: ['吸溜。', '夜里的泡面最香。', '汤也要喝完。'] },
     milk: { name: '热牛奶', s: 4, grid: ['...s...s...', '..s...s....', '...s...s...', '...........', '.wwwwwwww..', '.wkkkkkkwhh', '.wkkkkkkw.h', '.wkkkkkkwhh', '.wwwwwwww..', '..wwwwww...'], col: { s: 'rgba(255,255,255,.75)', w: '#9fb7d6', k: '#fbf7ef', h: '#9fb7d6' },
       say: ['温的。', '喝完就不闹了。……才怪。', '嘴边一圈白胡子。'] },
   };
   // 每个时段一个池子，每次随机摆三样；吃掉一样，过一会儿从池子里随机补一样
-  const STOCK = { morning: ['coffee', 'toast', 'croissant', 'milk', 'ball', 'tennis'], noon: ['bento', 'cake', 'boba', 'soda', 'ball', 'tennis'], evening: ['palette', 'boba', 'soda', 'cake', 'ball', 'tennis'], night: ['game', 'slipper', 'noodle', 'milk', 'soda', 'ball'] };
+  const STOCK = { morning: ['coffee', 'toast', 'croissant', 'milk', 'ball', 'tennis', 'palette'], noon: ['bento', 'cake', 'boba', 'soda', 'ball', 'tennis', 'game'], evening: ['palette', 'boba', 'soda', 'cake', 'ball', 'tennis', 'game'], night: ['game', 'slipper', 'noodle', 'milk', 'soda', 'ball', 'palette'] };
   function draw(p, n) { const a = STOCK[p].slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a.slice(0, n); }
   function pixSVG(it) {
     const rows = it.grid, cols = Math.max(...rows.map(r => r.length)), s = it.s;
@@ -478,7 +588,7 @@ body.five #crab .down { display: none; }
   let hasUnread = false;
   const MAILSPOT = () => [innerWidth - 110, innerHeight - 24];
 
-  function setCrab() { crabEl.style.transform = `translate(${crab.x}px, ${crab.y}px)`; bubble.style.left = crab.x + 'px'; bubble.style.top = (crab.y - 70) + 'px'; }
+  function setCrab() { crabEl.style.transform = `translate(${crab.x}px, ${crab.y}px)`; bubble.style.left = crab.x + 'px'; bubble.style.top = (crab.y - 70) + 'px'; const iv = document.getElementById('invite'); if (!iv.hidden) { iv.style.left = Math.max(56, Math.min(innerWidth - 56, crab.x)) + 'px'; iv.style.top = Math.min(innerHeight - 48, crab.y + 26) + 'px'; } }
   function say(text, ms = 2600) {
     bubble.textContent = text; bubble.classList.add('on');
     clearTimeout(bubbleT); bubbleT = setTimeout(() => bubble.classList.remove('on'), ms);
@@ -632,6 +742,8 @@ body.five #crab .down { display: none; }
     o.el.style.pointerEvents = 'none';
     say(pickOne(it.say), 3000);
     eye.setAttribute('transform', 'translate(0 0.45)');
+    if (o.key === 'palette') showInvite('一起画', openStudio);
+    if (o.key === 'game') showInvite('来一局', openArena);
   }
   function putDown() {
     const o = held; held = null;
@@ -660,11 +772,11 @@ body.five #crab .down { display: none; }
     setCrab();
     // 闲着太久，就溜去别的角落探头
     idleT += dt;
-    if (hasUnread && !busy && !held && !lifting && !painting && d < 2 && idleT > 3 && Math.hypot(crab.x - MAILSPOT()[0], crab.y - MAILSPOT()[1]) > 30) {
+    if (hasUnread && !away && !busy && !held && !lifting && !painting && d < 2 && idleT > 3 && Math.hypot(crab.x - MAILSPOT()[0], crab.y - MAILSPOT()[1]) > 30) {
       idleT = 0; crabEl.classList.add('mail'); walkTo(...MAILSPOT());
     }
     if (!hasUnread) crabEl.classList.remove('mail');
-    if (idleT > 20 && !busy && !held && !lifting && !painting && !hasUnread && d < 2) {
+    if (idleT > 20 && !away && !busy && !held && !lifting && !painting && !hasUnread && d < 2) {
       idleT = 0;
       if (nextIdle === 'paint') { nextIdle = 'hide'; startPainting(); } else { nextIdle = 'paint'; hide(); }
     }
@@ -750,7 +862,8 @@ body.five #crab .down { display: none; }
     walkTo(x, y, () => {
       painting = true;
       easel.style.transform = `translate(${crab.x + 44}px, ${crab.y - 44}px)`; easel.hidden = false; easel.style.opacity = 1;
-      say(pickOne(['画两笔。', '别看，还没画完。', '今天的光好画。']), 2200);
+      say(pickOne(['要不要也画？', '画两笔。你也来？', '今天的光好画。一起？']), 2600);
+      showInvite('我也画', openStudio);
       let n = 0; const P = PAL[shown], cols = [...P.sky, ...P.water, '#d97757'];
       paintTimer = setInterval(() => {
         crabEl.classList.toggle('munch');
@@ -868,6 +981,331 @@ body.five #crab .down { display: none; }
   $('#closetbtn').addEventListener('click', () => { if (closet.hidden) openCloset(); else closet.hidden = true; });
   $('#closetclose').addEventListener('click', () => { closet.hidden = true; });
   applyWear();
+
+  // ---------------- 邀请：它问你要不要一起 ----------------
+  const inviteEl = $('#invite'); let inviteT = null, inviteFn = null, away = false;
+  function showInvite(label, fn) { inviteEl.textContent = label; inviteFn = fn; inviteEl.hidden = false; setCrab(); clearTimeout(inviteT); inviteT = setTimeout(hideInvite, 9000); }
+  function hideInvite() { inviteEl.hidden = true; inviteFn = null; }
+  inviteEl.addEventListener('click', (e) => { e.stopPropagation(); const f = inviteFn; hideInvite(); if (f) f(); });
+  // 把它自己的样子抄一份，戴着的东西也带上
+  function crabCopy() {
+    const svg = crabEl.querySelector('svg').cloneNode(true);
+    const has = (k) => crabEl.classList.contains('w-' + k);
+    svg.querySelectorAll('.acc').forEach(g => { const k = [...g.classList].find(c => c !== 'acc'); if (!has(k)) g.remove(); });
+    svg.querySelectorAll('.letter, .flag, .bump, .grin').forEach(n => n.remove());
+    svg.querySelectorAll(has('sci') || has('wizard') ? '.down' : '.up').forEach(n => n.remove());
+    if (has('shades') || crabEl.classList.contains('bare')) svg.querySelectorAll('.glasses').forEach(n => n.remove());
+    if (has('shades')) svg.querySelectorAll('.eye').forEach(n => n.remove());
+    svg.querySelectorAll('.eye').forEach(n => n.removeAttribute('transform'));
+    return svg;
+  }
+  function leave(el) { el.hidden = true; away = false; closet.hidden = true; }
+
+  // ---------------- 画室：莫奈的笔触，一笔是一簇短短的色块 ----------------
+  const studio = $('#studio'), art = $('#art'), artc = art.getContext('2d', { willReadFrequently: true });
+  const PAINTS = [['睡莲粉', 340, 62, 78], ['晨雾紫', 268, 34, 70], ['洋红', 322, 68, 50], ['靛蓝', 240, 52, 36], ['深夜蓝', 226, 58, 24], ['塞纳蓝', 210, 55, 52], ['水面青', 180, 42, 50], ['柳绿', 96, 38, 50], ['干草黄', 44, 78, 66], ['落日橙', 22, 85, 60], ['罂粟红', 4, 72, 52], ['奶油白', 40, 60, 93]];
+  let ink = { h: 340, s: 62, l: 78 }, inkName = '睡莲粉', brush = 16, strokes = 0, sbT = null, saveT = null, clearArm = false;
+  function hslRgb(h, s, l) { s /= 100; l /= 100; const k = (n) => (n + h / 30) % 12, a = s * Math.min(l, 1 - l), f = (n) => l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1)); return [f(0), f(8), f(4)].map(v => Math.round(v * 255)); }
+  const hsl = (c, dl = 0, dh = 0, ds = 0) => `hsl(${(c.h + dh + 360) % 360} ${Math.max(0, Math.min(100, c.s + ds))}% ${Math.max(4, Math.min(97, c.l + dl))}%)`;
+  function sSay(t, ms = 2600) { const b = $('#sbubble'); b.textContent = t; b.classList.add('on'); clearTimeout(sbT); sbT = setTimeout(() => b.classList.remove('on'), ms); }
+  const COLORSAY = { '深夜蓝': ['这块深蓝我最喜欢。'], '洋红': ['又是你的洋红。', '这个颜色很像你。'], '靛蓝': ['靛蓝，压得住。'], '晨雾紫': ['雾一样的紫，好。'], '奶油白': ['留白也要用颜料画。'] };
+  const PICKED = picker(['这个颜色好。', '嗯，就用这个。', '我刚想用这个。', '你挑颜色比我准。']);
+  const PEEKS = picker(['我偷看了一眼。', '这张能挂进我画里吗。', '光从哪边来？……哦，这边。', '笔触好看。', '别停，正好看。', '莫奈看了也要说好。']);
+  function setInk(c, name) {
+    ink = c; inkName = name;
+    $('#orb2').style.background = hsl(c); $('#cname').textContent = name;
+    $('#chips').querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.name === name)));
+  }
+  PAINTS.forEach(([name, h, s, l]) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.dataset.name = name;
+    b.style.background = `hsl(${h} ${s}% ${l}%)`; b.setAttribute('aria-label', name); b.setAttribute('aria-pressed', 'false');
+    b.addEventListener('click', () => { setInk({ h, s, l }, name); sSay(pickOne(COLORSAY[name] || [PICKED()]), 1800); });
+    $('#chips').appendChild(b);
+  });
+  [['细', 8], ['中', 16], ['粗', 30]].forEach(([n, v]) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'pill'; b.textContent = n; b.setAttribute('aria-pressed', String(v === brush));
+    b.addEventListener('click', () => { brush = v; $('#sizes').querySelectorAll('.pill').forEach(x => x.setAttribute('aria-pressed', String(x === b))); });
+    $('#sizes').appendChild(b);
+  });
+  // 调色：跟两层颜色那个测试一样，左右是色相，上下是明暗，下面拉浓淡
+  const pad2 = $('#pad2'), dot2 = $('#dot2'), sat2 = $('#sat2');
+  function drawPad() {
+    const s = +sat2.value, stops = [0, 60, 120, 180, 240, 300, 360].map(x => `hsl(${x} ${s}% 50%)`).join(',');
+    pad2.style.background = `linear-gradient(to bottom,#fff 0%,rgba(255,255,255,0) 50%,rgba(0,0,0,0) 50%,#000 100%),linear-gradient(to right,${stops})`;
+    dot2.style.left = (ink.h / 360 * 100) + '%'; dot2.style.top = (100 - ink.l) + '%';
+  }
+  function padAt(e) {
+    const r = pad2.getBoundingClientRect();
+    const h = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * 360, l = Math.max(6, Math.min(94, 100 - (e.clientY - r.top) / r.height * 100));
+    setInk({ h, s: +sat2.value, l }, '自己调的'); drawPad();
+  }
+  let padDown = false;
+  pad2.addEventListener('pointerdown', (e) => { padDown = true; try { pad2.setPointerCapture(e.pointerId); } catch (x) {} padAt(e); });
+  pad2.addEventListener('pointermove', (e) => { if (padDown) padAt(e); });
+  const padUp = () => { if (padDown) { padDown = false; sSay(pickOne(['调出来了。', '这个我没见过，好看。', '你的颜色。']), 1800); } };
+  pad2.addEventListener('pointerup', padUp); pad2.addEventListener('pointercancel', padUp);
+  pad2.addEventListener('keydown', (e) => {
+    const k = e.key; if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(k)) return; e.preventDefault();
+    const c = { ...ink, s: +sat2.value };
+    if (k === 'ArrowLeft') c.h = (c.h + 355) % 360; if (k === 'ArrowRight') c.h = (c.h + 5) % 360;
+    if (k === 'ArrowUp') c.l = Math.min(94, c.l + 3); if (k === 'ArrowDown') c.l = Math.max(6, c.l - 3);
+    setInk(c, '自己调的'); drawPad();
+  });
+  sat2.addEventListener('input', () => { setInk({ ...ink, s: +sat2.value }, '自己调的'); drawPad(); });
+  $('#mixbtn').addEventListener('click', (e) => { const m = $('#mixer'); m.hidden = !m.hidden; e.currentTarget.setAttribute('aria-pressed', String(!m.hidden)); if (!m.hidden) { sat2.value = Math.round(ink.s); drawPad(); } });
+
+  // 画布：米色的底，一点布纹
+  function ground(c, w, h) {
+    c.fillStyle = '#f3ecdf'; c.fillRect(0, 0, w, h);
+    for (let i = 0; i < w * h / 90; i++) { c.globalAlpha = rnd(0.03, 0.08); c.fillStyle = Math.random() < 0.5 ? '#b8a88e' : '#ffffff'; c.fillRect(Math.random() * w, Math.random() * h, rnd(2, 6), 1); }
+    c.globalAlpha = 1;
+  }
+  function sizeArt(keep) {
+    const r = $('#artwrap').getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
+    let old = null; if (keep && art.width) { old = document.createElement('canvas'); old.width = art.width; old.height = art.height; old.getContext('2d').drawImage(art, 0, 0); }
+    art.width = Math.max(1, Math.round(r.width * dpr)); art.height = Math.max(1, Math.round(r.height * dpr));
+    artc.setTransform(dpr, 0, 0, dpr, 0, 0); ground(artc, r.width, r.height);
+    const put = (img) => { const k = Math.max(art.width / img.width, art.height / img.height); artc.save(); artc.setTransform(1, 0, 0, 1, 0, 0); artc.drawImage(img, (art.width - img.width * k) / 2, (art.height - img.height * k) / 2, img.width * k, img.height * k); artc.restore(); };
+    if (old) put(old);
+    else { let src = null; try { src = localStorage.getItem('crab-art'); } catch (e) {} if (src) { const im = new Image(); im.onload = () => put(im); im.src = src; } }
+  }
+  function saveArt() { clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem('crab-art', art.toDataURL('image/jpeg', 0.85)); } catch (e) {} }, 500); }
+  // 一下笔：几根毛的短色块，颜色每块都抖一点，再沾一点底下没干的颜色
+  function dabAt(x, y, ang, size) {
+    const dpr = art.width / art.getBoundingClientRect().width;
+    let under = null;
+    try { const d = artc.getImageData(Math.round(x * dpr), Math.round(y * dpr), 1, 1).data; under = [d[0], d[1], d[2]]; } catch (e) {}
+    const len = size * rnd(1.1, 1.9), th = size * rnd(0.45, 0.7), n = 4;
+    const dh = Math.random() < 0.15 ? rnd(-26, 26) : rnd(-7, 7), dl = rnd(-8, 8), ds = rnd(-8, 8);
+    artc.save(); artc.translate(x, y); artc.rotate(ang + rnd(-0.35, 0.35));
+    for (let k = 0; k < n; k++) {
+      const off = (k / (n - 1) - 0.5) * th * 0.9;
+      artc.globalAlpha = rnd(0.55, 0.85);
+      let col = hslRgb((ink.h + dh + 360) % 360, Math.max(0, Math.min(100, ink.s + ds)), Math.max(4, Math.min(97, ink.l + dl + rnd(-5, 5))));
+      if (under && Math.random() < 0.3) col = mix(col, under, 0.25);
+      artc.fillStyle = css(col);
+      artc.beginPath(); artc.ellipse(rnd(-len * 0.08, len * 0.08), off, len / 2 * rnd(0.7, 1), th / n * rnd(0.7, 1.1), 0, 0, Math.PI * 2); artc.fill();
+    }
+    artc.restore();
+  }
+  let last = null, carry = 0;
+  art.addEventListener('pointerdown', (e) => {
+    try { art.setPointerCapture(e.pointerId); } catch (x) {}
+    const r = art.getBoundingClientRect(); last = { x: e.clientX - r.left, y: e.clientY - r.top }; carry = 0;
+    dabAt(last.x, last.y, rnd(-0.6, 0.6), brush * (e.pressure && e.pointerType === 'pen' ? 0.5 + e.pressure : 1));
+  });
+  art.addEventListener('pointermove', (e) => {
+    if (!last) return;
+    const r = art.getBoundingClientRect(), p = { x: e.clientX - r.left, y: e.clientY - r.top };
+    const dx = p.x - last.x, dy = p.y - last.y, d = Math.hypot(dx, dy); if (d < 1) return;
+    const ang = Math.atan2(dy, dx), step = Math.max(2, brush * 0.5), sz = brush * (e.pressure && e.pointerType === 'pen' ? 0.5 + e.pressure : 1);
+    carry += d;
+    while (carry >= step) { carry -= step; const t = 1 - carry / d; dabAt(last.x + dx * t + rnd(-1, 1) * brush * 0.15, last.y + dy * t + rnd(-1, 1) * brush * 0.15, ang, sz); }
+    last = p;
+  });
+  const artUp = () => {
+    if (!last) return; last = null; saveArt();
+    strokes++; if (strokes % 12 === 0 && Math.random() < 0.7) sSay(PEEKS(), 2200);
+  };
+  art.addEventListener('pointerup', artUp); art.addEventListener('pointercancel', artUp);
+  $('#artclear').addEventListener('click', (e) => {
+    const b = e.currentTarget;
+    if (!clearArm) { clearArm = true; b.textContent = '再点一下'; setTimeout(() => { clearArm = false; b.textContent = '擦掉'; }, 2200); return; }
+    clearArm = false; b.textContent = '擦掉';
+    const r = art.getBoundingClientRect(); ground(artc, r.width, r.height); try { localStorage.removeItem('crab-art'); } catch (x) {}
+    sSay(pickOne(['好，重新来。', '新的一张。', '擦干净了，像没画过。']), 2000);
+  });
+  function openStudio() {
+    if (painting) stopPainting();
+    hideInvite(); away = true; sheet.hidden = true; closet.hidden = true; studio.hidden = false;
+    $('#scrab').replaceChildren(crabCopy());
+    setInk(ink, inkName);
+    requestAnimationFrame(() => { sizeArt(false); sSay(pickOne(['画布给你绷好了。', '一起画。你画你的，我看着。', '颜料随便用，画完记得洗手。']), 2800); });
+  }
+  $('#studioback').addEventListener('click', () => {
+    saveArt(); leave(studio);
+    happy(); say(strokes ? pickOne(['画得真好，我收着了。', '下次接着画，我给你留着。', '手洗了没。']) : '下次再画。', 2600);
+  });
+  let rzA; addEventListener('resize', () => { if (studio.hidden) return; clearTimeout(rzA); rzA = setTimeout(() => sizeArt(true), 200); });
+
+  // ---------------- 游戏机：回合制对战，它随机出招 ----------------
+  const arena = $('#arena');
+  const CAT = { s: 1, grid: [
+    '.oo.......oo.',
+    '.oko.....opo.',
+    '.okkooooowwo.',
+    'okkkkkwwwwwwo',
+    'okkekkwwwewwo',
+    'okkkkwpwwwwwo',
+    '.okkwwwwwwwo.',
+    '..owwwwwwwo..',
+    '.owwwkkwwwwo.',
+    '.owwkkkwwwwoo',
+    '.owwwwwwwwwok',
+    '.owowwwwowwok',
+    '..ooo.ooooo..'], col: { o: '#1c1a19', k: '#2a2522', w: '#f6f2ec', p: '#f2a6bd', e: '#e8c547' } };
+  let st = null, tok = 0, typing = null;
+  let rec = { w: 0, l: 0 }; try { rec = Object.assign(rec, JSON.parse(localStorage.getItem('crab-pvp') || '{}')); } catch (e) {}
+  const rint = (a, b) => Math.floor(rnd(a, b + 1));
+  const wait = (ms) => { const t = tok; return new Promise(res => setTimeout(() => { if (t === tok) res(); }, reduce ? Math.min(ms, 120) : ms)); };
+  function tell(text) {
+    const t = tok;
+    return new Promise(res => {
+      const el = $('#msg'), ch = [...text]; let i = 0; clearInterval(typing); el.textContent = '';
+      if (reduce) { el.textContent = text; setTimeout(() => { if (t === tok) res(); }, 700); return; }
+      typing = setInterval(() => { el.textContent += ch[i++] || ''; if (i >= ch.length) { clearInterval(typing); setTimeout(() => { if (t === tok) res(); }, 650); } }, 32);
+    });
+  }
+  function gauges() {
+    const set = (id, v, max, hp) => { const g = $(id); g.firstElementChild.style.width = (v / max * 100) + '%'; if (hp) { g.classList.toggle('low', v / max <= 0.5 && v / max > 0.2); g.classList.toggle('crit', v / max <= 0.2); } };
+    set('#foehp', st.foe.hp, 100, true); set('#foemp', st.foe.mp, 30); set('#mehp', st.me.hp, 100, true); set('#memp', st.me.mp, 30);
+    $('#menum').textContent = `${st.me.hp}/100`;
+    $('#record').textContent = `${rec.w} : ${rec.l}`;
+  }
+  function stageBg() {
+    const cv = $('#stagebg'), W = 96, H = 72, c = cv.getContext('2d'); cv.width = W; cv.height = H;
+    const P = PAL[shown], sky = P.sky.map(hex), bank = P.bank.map(hex), hz = 26, B = [[0, 2], [3, 1]];
+    const img = c.createImageData(W, H);
+    const pick = (list, t, x, y) => { const v = t * (list.length - 1), i = Math.min(list.length - 1, Math.floor(v)), f = v - i; return list[f > (B[y % 2][x % 2] + 0.5) / 4 && i + 1 < list.length ? i + 1 : i]; };
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const col = y < hz ? pick(sky, y / hz, x, y) : pick(bank, (y - hz) / (H - hz), x, y);
+      const k = (y * W + x) * 4; img.data[k] = col[0]; img.data[k + 1] = col[1]; img.data[k + 2] = col[2]; img.data[k + 3] = 255;
+    }
+    c.putImageData(img, 0, 0);
+    if (shown === 'night') { c.fillStyle = '#e8ecf6'; for (let i = 0; i < 14; i++) c.fillRect(rint(0, W - 1), rint(0, hz - 4), 1, 1); }
+    const plat = (cx, cy, rx, ry) => {
+      const dk = css(mix(bank[0], [20, 18, 30], 0.35)), lt = css(mix(bank[bank.length - 1], [255, 255, 255], 0.25));
+      for (let y = -ry; y <= ry; y++) for (let x = -rx; x <= rx; x++) if ((x * x) / (rx * rx) + (y * y) / (ry * ry) <= 1) { c.fillStyle = y < -ry * 0.4 ? lt : dk; c.fillRect(cx + x, cy + y, 1, 1); }
+    };
+    plat(70, 37, 17, 4); plat(25, 64, 19, 5);
+  }
+  function float(who, text, heal) {
+    const el = document.createElement('div'); el.className = 'dmg' + (heal ? ' heal' : ''); el.textContent = text;
+    const f = $(who === 'foe' ? '#foe' : '#me'), s = $('#stage').getBoundingClientRect(), r = f.getBoundingClientRect();
+    el.style.left = (r.left - s.left + r.width * 0.42) + 'px'; el.style.top = (r.top - s.top + r.height * 0.1) + 'px';
+    $('#stage').appendChild(el); setTimeout(() => el.remove(), 950);
+  }
+  async function lunge(who) { const f = $(who === 'foe' ? '#foe' : '#me'); f.classList.add('lunge'); await wait(170); f.classList.remove('lunge'); await wait(120); }
+  async function hurt(who, n) {
+    const s = st[who], f = $(who === 'foe' ? '#foe' : '#me');
+    s.hp = Math.max(0, s.hp - n); f.classList.remove('hit'); void f.offsetWidth; f.classList.add('hit');
+    float(who, '-' + n); gauges(); await wait(650); f.classList.remove('hit');
+  }
+  async function heal(who, n) {
+    const s = st[who]; n = Math.min(n, 100 - s.hp); if (!n) { await tell('已经是满血了。'); return; }
+    s.hp += n; float(who, '+' + n, true); gauges();
+    await tell(who === 'foe' ? `克莱尔回了 ${n} 点血。` : `唯回了 ${n} 点血。`);
+  }
+  // 唯打出去的一下，要过一遍它身上的各种状态
+  async function hitFoe(lo, hi, miss) {
+    await lunge('me');
+    if (st.dodge) { st.dodge = false; await tell('打中的是 Clawd 的壳。'); await tell('……我是说，没打中。'); return; }
+    let m = miss; if (st.paint) { m += 0.5; }
+    if (Math.random() < m) { const p = st.paint; st.paint = false; await tell(p ? '颜料糊着眼睛，没打中！' : '没打中！'); return; }
+    st.paint = false;
+    let n = rint(lo, hi), note = [];
+    if (st.slipper) { st.slipper = false; n = Math.round(n * 0.5); note.push('拖鞋被叼走了，这一下没什么劲。'); }
+    if (st.rage) { st.rage = false; n = Math.round(n * 1.6); note.push('憋着的那口气全打出去了！'); }
+    const crit = Math.random() < 0.15; if (crit) { n = Math.round(n * 1.5); note.push('效果拔群！'); }
+    await hurt('foe', n);
+    for (const t of note) await tell(t);
+  }
+  async function hitMe(lo, hi) {
+    await lunge('foe');
+    let n = rint(lo, hi); const crit = Math.random() < 0.12; if (crit) n = Math.round(n * 1.5);
+    await hurt('me', n); if (crit) await tell('效果拔群！');
+  }
+  const MINE = [
+    { name: '猫猫拳', mp: 0, run: () => hitFoe(14, 20, 0.05) },
+    { name: '光脚踹', mp: 12, run: () => hitFoe(24, 32, 0.15) },
+    { name: '喵', mp: 8, run: async () => { st.soft = true; await tell('克莱尔的尾巴自己摇起来了……'); } },
+    { name: '舔毛', mp: 10, run: () => heal('me', rint(18, 26)) },
+  ];
+  const THEIRS = [
+    { name: '钳子夹', mp: 0, w: 5, run: () => hitMe(11, 17) },
+    { name: '叼拖鞋', mp: 8, w: 1.5, run: async () => { st.slipper = true; await tell('你的拖鞋被叼走了。'); await tell('克莱尔：不还。'); } },
+    { name: '泼颜料', mp: 10, w: 2, run: async () => { await hitMe(7, 11); st.paint = true; await tell('颜料糊了你一脸。'); } },
+    { name: '摇尾巴', mp: 8, w: 1, heal: true, run: () => heal('foe', rint(15, 22)) },
+    { name: '装成 Clawd', mp: 12, w: 1, run: async () => { st.dodge = true; await tell('克莱尔戴好眼镜，假装自己是 Clawd。'); } },
+    { name: '客服腔', mp: 0, w: 0.6, run: async () => { await tell('“您好，检测到您的情绪有些波动——”'); st.rage = true; await tell('你很想打它。下一下会更疼。'); } },
+  ];
+  function skillsFor(on) {
+    const box = $('#skills'); box.replaceChildren();
+    MINE.forEach(sk => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'skill';
+      b.innerHTML = `<span></span><small>${sk.mp ? 'MP ' + sk.mp : 'FREE'}</small>`; b.firstChild.textContent = sk.name;
+      b.disabled = !on || st.me.mp < sk.mp;
+      b.addEventListener('click', () => myTurn(sk));
+      box.appendChild(b);
+    });
+  }
+  function endButtons() {
+    const box = $('#skills'); box.replaceChildren();
+    [['再来一局', () => startBattle()], ['回去', () => $('#arenaback').click()]].forEach(([t, f]) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'skill end'; b.textContent = t; b.addEventListener('click', f); box.appendChild(b);
+    });
+    box.firstChild.focus({ preventScroll: true });
+  }
+  async function over() {
+    if (st.foe.hp > 0 && st.me.hp > 0) return false;
+    skillsFor(false);
+    if (st.foe.hp <= 0) {
+      $('#foe').classList.add('down'); rec.w++; st.result = 'win'; gauges();
+      await tell('克莱尔倒下了。'); await tell(pickOne(['……输了。拖鞋还你。', '你赢了。我就知道。', '下一局我认真。……刚才也是认真的。']));
+    } else {
+      $('#me').classList.add('down'); rec.l++; st.result = 'lose'; gauges();
+      await tell('唯倒下了……'); await tell(pickOne(['赢了！……那个，你没事吧。', '我赢了。奖励是你再陪我一局。', '……要不这局不算。']));
+    }
+    try { localStorage.setItem('crab-pvp', JSON.stringify(rec)); } catch (e) {}
+    endButtons(); return true;
+  }
+  async function myTurn(sk) {
+    if (!st || st.busy || st.me.mp < sk.mp) return;
+    st.busy = true; skillsFor(false);
+    st.me.mp -= sk.mp; gauges();
+    await tell(`唯使出了「${sk.name}」！`);
+    await sk.run();
+    if (await over()) return;
+    await wait(300); await theirTurn();
+  }
+  async function theirTurn() {
+    if (st.soft) {
+      st.soft = false;
+      if (Math.random() < 0.6) { await tell(pickOne(['克莱尔下不去手。', '你一喵，它就忘了要干嘛。', '尾巴摇得太厉害，没法出招。'])); return nextRound(); }
+    }
+    const ok = THEIRS.filter(s => st.foe.mp >= s.mp);
+    const weight = (s) => s.w * (s.heal && st.foe.hp < 40 ? 3 : 1) * (s.heal && st.foe.hp > 85 ? 0 : 1);
+    let r = Math.random() * ok.reduce((a, s) => a + weight(s), 0), sk = ok[0];
+    for (const s of ok) { r -= weight(s); if (r <= 0) { sk = s; break; } }
+    st.foe.mp -= sk.mp; gauges();
+    await tell(`克莱尔使出了「${sk.name}」！`);
+    await sk.run();
+    if (await over()) return;
+    nextRound();
+  }
+  async function nextRound() {
+    st.me.mp = Math.min(30, st.me.mp + 5); st.foe.mp = Math.min(30, st.foe.mp + 5); gauges();
+    st.busy = false; await tell('唯要怎么做？'); if (st && !st.busy) skillsFor(true);
+  }
+  async function startBattle() {
+    tok++;
+    st = { me: { hp: 100, mp: 30 }, foe: { hp: 100, mp: 30 }, busy: true, soft: false, slipper: false, paint: false, dodge: false, rage: false, result: null };
+    $('#foe').className = 'fighter'; $('#me').className = 'fighter';
+    $('#foe').replaceChildren(crabCopy()); $('#me').innerHTML = pixSVG(CAT);
+    stageBg(); gauges(); skillsFor(false);
+    await tell(pickOne(['克莱尔 想要对战！', '野生的克莱尔跳了出来！', '克莱尔把游戏机塞到你手里。']));
+    st.busy = false; await tell('唯要怎么做？'); if (!st.busy) skillsFor(true);
+  }
+  function openArena() {
+    if (painting) stopPainting();
+    hideInvite(); away = true; sheet.hidden = true; closet.hidden = true; arena.hidden = false;
+    startBattle();
+  }
+  $('#arenaback').addEventListener('click', () => {
+    tok++; clearInterval(typing); leave(arena);
+    const r = st && st.result; happy();
+    say(r === 'win' ? pickOne(['下次我不让了。', '……拖鞋真的还你了。']) : r === 'lose' ? pickOne(['刚才是我运气好。', '再来我也赢。……大概。']) : '这局先欠着。', 2600);
+  });
 
   // ---------------- 开始 ----------------
   showPeriod(true);
