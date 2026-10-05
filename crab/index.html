@@ -293,29 +293,28 @@ body.five #crab .down { display: none; }
 #work.dark #wscene { background: #2e3254; }
 #wwin { position: absolute; left: 8%; top: 7%; width: 40%; height: 32%; border: 5px solid #f4efe6; box-shadow: 0 2px 0 rgba(42, 37, 34, 0.15); background: #cfd6ea; }
 #wdesk { position: absolute; left: 0; right: 0; bottom: 0; height: 24%; background: #8a5a3c; border-top: 5px solid #6b4630; }
-#wcrab { position: absolute; left: 27%; width: 46%; bottom: 31%; z-index: 1; transform-origin: 50% 100%; transition: transform 0.6s cubic-bezier(.2, .8, .2, 1); }
-#wcrab svg { width: 100%; height: auto; display: block; overflow: visible; }
-#wlap { position: absolute; left: 28%; width: 44%; bottom: 16%; z-index: 2; }
-#wlap svg { width: 100%; height: auto; display: block; }
-#witem { position: absolute; left: 71%; bottom: 52%; width: 11%; z-index: 3; transition: opacity 0.4s ease; }
-#witem svg { width: 100%; height: auto; display: block; overflow: visible; }
-#witem.tilt svg { transform: rotate(-38deg); transform-origin: 50% 60%; transition: transform 0.3s ease; }
-.key { position: absolute; width: 5px; height: 5px; background: #f4efe6; z-index: 3; animation: keyup 0.45s steps(3) forwards; pointer-events: none; }
-@keyframes keyup { to { transform: translateY(-14px); opacity: 0; } }
-.wk.typing .cl { animation: tapL 0.3s steps(1) infinite; }
-.wk.typing .cr { animation: tapR 0.3s steps(1) infinite; }
-@keyframes tapL { 50% { transform: translateY(0.7px); } }
-@keyframes tapR { 0% { transform: translateY(0.7px); } 50% { transform: none; } }
-.wk.typing svg { animation: wbob 0.6s steps(2) infinite; }
-@keyframes wbob { 50% { transform: translateY(-1.5%); } }
-.wk.chomp svg { transform: scale(1.05, 0.92); }
-.wk.sip svg { transform: rotate(7deg); transform-origin: 50% 100%; }
-.wk.stretch svg { transform: scale(0.94, 1.14); transform-origin: 50% 100%; transition: transform 0.5s ease; }
-#wcrab.peek { z-index: 4; transform: translateY(-6%) scale(1.55); }
-#wcrab .wblush, #wcrab .wshut { display: none; }
-#wcrab.blush .wblush, #wcrab.peek .wblush { display: block; }
-#wcrab.doze .wshut { display: block; } #wcrab.doze .eye { display: none; }
-#wcrab.doze svg { transform: rotate(-6deg) translateY(3%); transform-origin: 50% 100%; transition: transform 0.8s ease; }
+#wcrab { position: absolute; left: 16%; width: 64%; bottom: 23.5%; z-index: 1; }
+#wcrab .side { width: 100%; height: auto; display: block; overflow: visible; }
+#wcrab .side .body { transform-origin: 30% 100%; transform-box: fill-box; }
+#wcrab .ss, #wcrab .sb { display: none; }
+#wcrab.blush .sb { display: block; }
+#wcrab.doze .ss { display: block; } #wcrab.doze .se { display: none; }
+#wcrab.doze .body { transform: rotate(-4deg) translateY(0.4px); transition: transform 0.8s ease; }
+.wk.typing .claw { animation: tap 0.3s steps(1) infinite; }
+@keyframes tap { 50% { transform: translateY(-0.9px); } }
+.wk.typing .body { animation: wbob 0.6s steps(2) infinite; }
+@keyframes wbob { 50% { transform: translateY(-0.3px); } }
+.wk.chomp .body { transform: scale(1.04, 0.93); }
+.wk.sip .body { transform: rotate(-6deg); }
+.wk.sip.gulp .body { transform: rotate(-6deg) translateY(-0.4px); }
+.wk.stretch .body { transform: scale(0.95, 1.12); transition: transform 0.5s ease; }
+#wcrab.peek .side { visibility: hidden; }
+.wk.turn .body, .wk.turn .legs { transform: scaleX(-1); transform-box: view-box; transform-origin: 9px 0; }
+#wfront { position: absolute; left: 22%; width: 56%; bottom: 18%; z-index: 4; animation: popin 0.45s cubic-bezier(.2, .8, .2, 1); }
+#wfront svg { width: 100%; height: auto; display: block; overflow: visible; }
+@keyframes popin { from { transform: scale(0.6) translateY(10%); opacity: 0; } }
+#wlap { display: none; }
+#witem { position: absolute; left: 56%; bottom: 40%; width: 12%; z-index: 3; transition: opacity 0.4s ease; }
 #wbtns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 #wbtns button { font: inherit; font-size: 15px; letter-spacing: 0.12em; border-radius: 999px; padding: 7px 20px; cursor: pointer; border: 1px solid var(--edge); background: #fffdf9; color: var(--ink); }
 #wbtns button.main { background: var(--shell); border-color: var(--shell); color: var(--paper); }
@@ -323,8 +322,7 @@ body.five #crab .down { display: none; }
 #wsum { width: min(100%, 440px); background: #fffdf9; color: var(--ink); border: 1px solid var(--edge); border-radius: 14px; padding: 14px 16px; font-size: 15px; line-height: 1.75; box-shadow: 0 10px 30px rgba(42, 37, 34, 0.12); }
 #wsum b { font-family: "Silkscreen", monospace; font-weight: 400; font-size: 20px; letter-spacing: 0.04em; }
 #wsum .soft { color: var(--soft); font-size: 13px; }
-@media (prefers-reduced-motion: reduce) { .wk.typing svg, .wk.typing .cl, .wk.typing .cr, .key { animation: none; } }
-.wk.sip.gulp svg { transform: rotate(7deg) translateY(-2%) scale(0.98, 1.03); }
+@media (prefers-reduced-motion: reduce) { .wk.typing .body, .wk.typing .claw, .key, #wfront { animation: none; } }
 /* 吃和喝：吃是一口一口咬，喝是举起来仰头 */
 #crab .blush { display: none; }
 #crab.blush .blush, #crab.blush .up { display: block; }
@@ -1536,13 +1534,28 @@ body.five #crab .down { display: none; }
   let wtok = 0, wtick = null, keysT = null, nextEvt = 0, wbusy = false, lineT = null;
   const wwait = (ms) => { const t = wtok; return new Promise(res => setTimeout(() => { if (t === wtok) res(); }, ms)); };
   function wline(t) { const el = $('#wline'); el.textContent = t; clearTimeout(lineT); lineT = setTimeout(() => { if (el.textContent === t) el.textContent = ''; }, 4200); }
-  const weye = (tr) => { const e = wcrab.querySelector('.eye'); if (e) e.setAttribute('transform', tr); };
+  // 侧着的螃蟹，照 Clawd 打字那个角度：左边一溜暗面，脸朝右，前钳伸向笔记本
+  const SIDE = (() => {
+    const R = (x, y, w, h, c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
+    const L = '#d97757', D = '#b8654a', E = '#1c1a19', G = '#8e94a3', P = '#f2a6bd';
+    return '<svg class="side" viewBox="0 0 28 14" shape-rendering="crispEdges" aria-hidden="true">'
+      + '<g class="laptop">' + R(18, 12, 6, 1, G) + R(23, 11, 2, 1, G) + R(24, 10, 2, 1, G) + R(25, 9, 2, 1, G) + R(26, 8, 2, 1, G) + R(27, 7, 1, 1, G) + '</g>'
+      + '<g class="legs">' + R(1, 11, 2, 1, D) + R(0, 12, 2, 2, D) + R(5, 11, 2, 1, L) + R(4, 12, 2, 2, L) + R(11, 11, 2, 1, L) + R(10, 12, 2, 2, L) + R(15, 11, 2, 1, L) + R(14, 12, 2, 2, L) + '</g>'
+      + '<g class="body">' + R(1, 0, 4, 11, D) + R(5, 0, 12, 11, L)
+      + '<g class="se">' + R(7, 3, 2, 2, E) + R(15, 3, 2, 2, E) + '</g>'
+      + '<g class="ss">' + R(7, 4.3, 2, 0.6, E) + R(15, 4.3, 2, 0.6, E) + '</g>'
+      + '<g class="sb">' + R(9.4, 5.6, 1.8, 0.7, P) + '</g>'
+      + '<g class="claw">' + R(17, 6, 3, 4, L) + R(20, 7, 1, 4, D) + R(17, 10, 4, 1, D) + '</g></g></svg>';
+  })();
   function buildWorkCrab() {
-    const svg = crabCopy();
-    svg.querySelectorAll('rect').forEach(r => { const x = r.getAttribute('x'); if (x === '-7.17' || x === '-7') r.classList.add('cl'); });
-    svg.querySelectorAll('.down, .up').forEach(r => r.classList.add('cr'));
-    svg.insertAdjacentHTML('beforeend', '<g class="wblush" fill="#f2a6bd" opacity=".85"><rect x="-5.4" y="-5.5" width="1.5" height=".6"/><rect x="3.9" y="-5.5" width="1.5" height=".6"/></g><g class="wshut" fill="#1c1a19"><rect x="-3.9" y="-6.1" width="1.8" height=".5"/><rect x="2.1" y="-6.1" width="1.8" height=".5"/></g>');
-    wcrab.replaceChildren(svg); weye('translate(0 0.45)');
+    wcrab.innerHTML = SIDE;
+  }
+  function frontPeek(on) {
+    const old = $('#wfront'); if (old) old.remove();
+    if (!on) return;
+    const f = document.createElement('div'); f.id = 'wfront'; const svg = crabCopy();
+    svg.insertAdjacentHTML('beforeend', '<g fill="#f2a6bd" opacity=".85"><rect x="-5.4" y="-5.5" width="1.5" height=".6"/><rect x="3.9" y="-5.5" width="1.5" height=".6"/></g>');
+    f.appendChild(svg); $('#wscene').appendChild(f);
   }
   function drawWin() {
     const cv = $('#wwin'), r = cv.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
@@ -1554,11 +1567,11 @@ body.five #crab .down { display: none; }
     clearInterval(keysT); if (!on || reduce) return;
     keysT = setInterval(() => {
       const k = document.createElement('div'); k.className = 'key';
-      k.style.left = rnd(32, 66) + '%'; k.style.bottom = rnd(43, 47) + '%';
+      k.style.left = rnd(57, 70) + '%'; k.style.bottom = rnd(28.5, 31) + '%';
       $('#wscene').appendChild(k); setTimeout(() => k.remove(), 480);
     }, 170);
   }
-  function wtype(on) { wcrab.classList.toggle('typing', on); keyTaps(on); if (on) weye('translate(0 0.45)'); }
+  function wtype(on) { wcrab.classList.toggle('typing', on); keyTaps(on); }
   const TYPE = ['嗒嗒嗒。', '在写，在写。', '这个变量叫什么好。', '跑通了。……又没跑通。', '我写我的，你忙你的。', '这一段删了重写。', '你那边顺吗。'];
   const MOYU = ['snack', 'snack', 'stretch', 'window', 'peek', 'doze'];
   async function moyu(kind) {
@@ -1567,7 +1580,7 @@ body.five #crab .down { display: none; }
       const key = pickOne(['coffee', 'boba', 'milk', 'soda', 'toast', 'croissant', 'cake', 'noodle', 'bento'].filter(k => ITEMS[k]));
       const it = ITEMS[key], drink = ['coffee', 'boba', 'soda', 'milk'].includes(key);
       witem.innerHTML = pixSVG(it); witem.style.clipPath = ''; witem.classList.toggle('tilt', drink); witem.hidden = false;
-      wcrab.classList.add('blush'); weye('translate(0.5 0)');
+      wcrab.classList.add('blush');
       wline(pickOne(['摸一下鱼。', '就一口。', '嘘，别说出去。', `偷偷${drink ? '喝' : '吃'}一口${it.name}。`]));
       if (drink) { wcrab.classList.add('sip'); for (let i = 0; i < 6; i++) { await wwait(300); wcrab.classList.toggle('gulp'); } }
       else for (let k = 1; k <= 5; k++) { wcrab.classList.add('chomp'); witem.style.clipPath = `inset(0 0 0 ${k * 20}%)`; await wwait(220); wcrab.classList.remove('chomp'); await wwait(220); }
@@ -1575,10 +1588,10 @@ body.five #crab .down { display: none; }
     } else if (kind === 'stretch') {
       wcrab.classList.add('stretch'); wline(pickOne(['伸个懒腰。', '嗯——', '钳子敲酸了。'])); await wwait(1400); wcrab.classList.remove('stretch'); await wwait(500);
     } else if (kind === 'window') {
-      weye('translate(-0.55 -0.35)'); wline(pickOne(['窗外的光变了。', '发会儿呆。', '看一眼画里的水。'])); await wwait(2600);
+      wcrab.classList.add('turn'); wline(pickOne(['窗外的光变了。', '发会儿呆。', '看一眼画里的水。'])); await wwait(2600); wcrab.classList.remove('turn');
     } else if (kind === 'peek') {
-      weye('translate(0 0)'); wcrab.classList.add('peek'); wline(pickOne(['你写到哪了？', '凑过来看一眼。', '……继续，我不吵。', '你认真的时候好专心。'])); await wwait(2600);
-      wcrab.classList.remove('peek'); await wwait(600);
+      wcrab.classList.add('peek'); frontPeek(true); wline(pickOne(['你写到哪了？', '凑过来看一眼。', '……继续，我不吵。', '你认真的时候好专心。'])); await wwait(2600);
+      wcrab.classList.remove('peek'); frontPeek(false); await wwait(600);
     } else {
       wcrab.classList.add('doze'); wline('……'); await wwait(2200); wcrab.classList.remove('doze'); wline(pickOne(['没睡！', '我醒着。', '刚才那下不算。'])); await wwait(1200);
     }
@@ -1614,7 +1627,7 @@ body.five #crab .down { display: none; }
   function wend() {
     const ms = welapsed(), n = W.moyu;
     W = { run: false, start: 0, acc: 0, moyu: 0 }; wsave(); pcbtn.classList.remove('on');
-    wtok++; wbusy = false; wtype(false); witem.hidden = true; wcrab.classList.remove('peek', 'doze', 'blush', 'sip', 'gulp', 'chomp', 'stretch'); weye('translate(0 0)');
+    wtok++; wbusy = false; wtype(false); witem.hidden = true; wcrab.classList.remove('peek', 'doze', 'blush', 'sip', 'gulp', 'chomp', 'stretch', 'turn'); frontPeek(false);
     let day = { d: today(), ms: 0 }; try { const o = JSON.parse(localStorage.getItem('crab-work-day') || '{}'); if (o.d === today()) day = o; } catch (e) {}
     day.ms += ms; try { localStorage.setItem('crab-work-day', JSON.stringify(day)); } catch (e) {}
     const m = ms / 60000, text = pickOne(SUM.find(([lim]) => m < lim)[1]);
@@ -1636,7 +1649,7 @@ body.five #crab .down { display: none; }
     if (painting) stopPainting();
     hideInvite(); away = true; sheet.hidden = true; closet.hidden = true; work.hidden = false;
     work.classList.toggle('dark', shown === 'night');
-    buildWorkCrab(); witem.hidden = true; $('#wsum').hidden = true; wbusy = false; wtok++;
+    buildWorkCrab(); frontPeek(false); witem.hidden = true; $('#wsum').hidden = true; wbusy = false; wtok++;
     requestAnimationFrame(drawWin);
     $('#wtime').textContent = hms(welapsed()); wbuttons();
     if (W.run) { wtype(true); nextEvt = Date.now() + rnd(15, 40) * 1000; wline('我一直在敲，你回来了。'); }
