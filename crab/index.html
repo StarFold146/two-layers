@@ -402,12 +402,22 @@ body.five #crab .down { display: none; }
       say: ['傍晚的水，调了三遍。', '这块深蓝留着夜里用。', '别动，你站在光里。'], down: '颜料没干，别碰。' },
     slipper: { name: '拖鞋', s: 4, hold: true, grid: ['k..k........', 'pppp........', 'pkkpp.......', 'pkkppp......', 'pppppppppkkp', 'ssssssssssss'], col: { p: '#f6f2ec', k: '#2a2522', s: '#c9a99a' },
       say: ['你的拖鞋。我先收着。', '不还。', '藏进画里了，自己来找。'], down: '……借你穿一下。' },
+    toast: { name: '吐司', s: 4, grid: ['..bbbbbb..', '.bttttttb.', 'bttttttttb', 'bttyyyyttb', 'bttyyyyttb', 'bttttttttb', 'bttttttttb', 'bbbbbbbbbb'], col: { b: '#b8732f', t: '#f2c47a', y: '#fff1a8' },
+      say: ['咔嚓。', '黄油抹得刚好。', '边边也吃了。'] },
+    ball: { name: '篮球', s: 4, ball: true, grid: ['...oooo...', '.oooxoooo.', '.ooxoooxo.', 'oxxxxxxxxo', 'oooxoooxoo', 'oooxoooxoo', 'oxxxxxxxxo', '.ooxoooxo.', '.oooxooo..', '...oooo...'], col: { o: '#e07a2f', x: '#4a2614' },
+      say: ['看我三分。', '钳子运球，犯规吗。', '空心！……吧。'] },
+    soda: { name: '汽水', s: 4, grid: ['.ggggg.', 'rrrrrrr', 'rwwrwwr', 'rrrrrrr', 'rrwwwrr', 'rrrrrrr', 'rrrrrrr', '.rrrrr.'], col: { r: '#3a7ca5', w: '#f0f4f8', g: '#c9ced6' },
+      say: ['气泡冲到鼻子了。', '嗝。', '冰的，好。'] },
+    game: { name: '游戏机', s: 4, hold: true, grid: ['.gggggggggggg.', 'ggaggssssggbgg', 'gaaagssssgbgbg', 'ggaggssssggbgg', 'gggggssssggggg', '.gggggggggggg.'], col: { g: '#5b5f8a', a: '#22243a', s: '#9fd8c4', b: '#e0566b' },
+      say: ['这关我能过。', '别看，我要输了。', '再一局。就一局。'] },
     noodle: { name: '泡面', s: 4, grid: ['s..s..s..', '.s..s..s.', 'wwwwwwwww', 'rrrrrrrrr', '.wwwwwww.', '.wwrrrww.', '.wwwwwww.', '..wwwww..'], col: { s: 'rgba(255,255,255,.7)', w: '#f4efe7', r: '#d24b3c' },
       say: ['吸溜。', '夜里的泡面最香。', '汤也要喝完。'] },
     milk: { name: '热牛奶', s: 4, grid: ['...s...s...', '..s...s....', '...s...s...', '...........', '.wwwwwwww..', '.wkkkkkkwhh', '.wkkkkkkw.h', '.wkkkkkkwhh', '.wwwwwwww..', '..wwwwww...'], col: { s: 'rgba(255,255,255,.75)', w: '#9fb7d6', k: '#fbf7ef', h: '#9fb7d6' },
       say: ['温的。', '喝完就不闹了。……才怪。', '嘴边一圈白胡子。'] },
   };
-  const STOCK = { morning: ['coffee', 'croissant', 'tennis'], noon: ['bento', 'cake', 'tennis'], evening: ['palette', 'boba', 'tennis'], night: ['slipper', 'noodle', 'milk'] };
+  // 每个时段一个池子，每次随机摆三样；吃掉一样，过一会儿从池子里随机补一样
+  const STOCK = { morning: ['coffee', 'toast', 'croissant', 'milk', 'ball', 'tennis'], noon: ['bento', 'cake', 'boba', 'soda', 'ball', 'tennis'], evening: ['palette', 'boba', 'soda', 'cake', 'ball', 'tennis'], night: ['game', 'slipper', 'noodle', 'milk', 'soda', 'ball'] };
+  function draw(p, n) { const a = STOCK[p].slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a.slice(0, n); }
   function pixSVG(it) {
     const rows = it.grid, cols = Math.max(...rows.map(r => r.length)), s = it.s;
     let rects = '';
@@ -420,7 +430,7 @@ body.five #crab .down { display: none; }
     items.forEach(o => o.el.remove()); items = []; held = null; busy = false;
     const W = innerWidth, H = innerHeight;
     const spots = [[0.18, 0.78], [0.82, 0.74], [0.5, 0.88], [0.2, 0.3], [0.8, 0.28]];
-    STOCK[shown].forEach((key, i) => {
+    draw(shown, 3).forEach((key, i) => {
       const [fx, fy] = spots[i];
       addItem(key, fx * W + rnd(-20, 20), fy * H + rnd(-16, 16));
     });
@@ -595,13 +605,15 @@ body.five #crab .down { display: none; }
     let n = 0; const m = setInterval(() => { crabEl.classList.toggle('munch'); if (++n > 7) { clearInterval(m); crabEl.classList.remove('munch'); } }, 180);
     say(pickOne(it.say));
     setTimeout(() => { o.el.classList.add('gone'); }, 900);
-    setTimeout(() => { o.el.remove(); items = items.filter(i => i !== o); busy = false; respawn(o.key); }, 1600);
+    setTimeout(() => { o.el.remove(); items = items.filter(i => i !== o); busy = false; respawn(); }, 1600);
   }
-  function respawn(key) {
+  function respawn() {
     const p = shown;
     setTimeout(() => {
-      if (shown !== p || items.some(i => i.key === key)) return;
-      const o = addItem(key, rnd(0.15, 0.85) * innerWidth, rnd(0.72, 0.9) * innerHeight);
+      if (shown !== p || items.length >= 3) return;
+      const pool = STOCK[p].filter(k => !items.some(i => i.key === k));
+      if (!pool.length) return;
+      const o = addItem(pool[Math.floor(Math.random() * pool.length)], rnd(0.15, 0.85) * innerWidth, rnd(0.72, 0.9) * innerHeight);
       o.el.classList.add('gone'); requestAnimationFrame(() => o.el.classList.remove('gone'));
     }, 40000);
   }
