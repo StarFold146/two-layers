@@ -300,7 +300,9 @@ body.five #crab .down { display: none; }
 #wcrab.blush .sb { display: block; }
 #wcrab.doze .ss { display: block; } #wcrab.doze .se { display: none; }
 #wcrab.doze .body { transform: rotate(-4deg) translateY(0.4px); transition: transform 0.8s ease; }
-.wk.typing .claw { animation: tap 0.3s steps(1) infinite; }
+.wk.typing .cf { animation: tap 0.3s steps(1) infinite; }
+.wk.typing .cb { animation: tap 0.3s steps(1) -0.15s infinite; }
+#wcrab.doze .glasses { transform: translateY(0.3px); }
 @keyframes tap { 50% { transform: translateY(-0.9px); } }
 .wk.typing .body { animation: wbob 0.6s steps(2) infinite; }
 @keyframes wbob { 50% { transform: translateY(-0.3px); } }
@@ -309,7 +311,7 @@ body.five #crab .down { display: none; }
 .wk.sip.gulp .body { transform: rotate(-6deg) translateY(-0.4px); }
 .wk.stretch .body { transform: scale(0.95, 1.12); transition: transform 0.5s ease; }
 #wcrab.peek .side { visibility: hidden; }
-.wk.turn .body, .wk.turn .legs { transform: scaleX(-1); transform-box: view-box; transform-origin: 9px 0; }
+.wk.turn .body, .wk.turn .legs, .wk.turn .cb { transform: scaleX(-1); transform-box: view-box; transform-origin: 9px 0; }
 #wfront { position: absolute; left: 22%; width: 56%; bottom: 18%; z-index: 4; animation: popin 0.45s cubic-bezier(.2, .8, .2, 1); }
 #wfront svg { width: 100%; height: auto; display: block; overflow: visible; }
 @keyframes popin { from { transform: scale(0.6) translateY(10%); opacity: 0; } }
@@ -322,7 +324,7 @@ body.five #crab .down { display: none; }
 #wsum { width: min(100%, 440px); background: #fffdf9; color: var(--ink); border: 1px solid var(--edge); border-radius: 14px; padding: 14px 16px; font-size: 15px; line-height: 1.75; box-shadow: 0 10px 30px rgba(42, 37, 34, 0.12); }
 #wsum b { font-family: "Silkscreen", monospace; font-weight: 400; font-size: 20px; letter-spacing: 0.04em; }
 #wsum .soft { color: var(--soft); font-size: 13px; }
-@media (prefers-reduced-motion: reduce) { .wk.typing .body, .wk.typing .claw, .key, #wfront { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .wk.typing .body, .wk.typing .cf, .wk.typing .cb, .key, #wfront { animation: none; } }
 /* 吃和喝：吃是一口一口咬，喝是举起来仰头 */
 #crab .blush { display: none; }
 #crab.blush .blush, #crab.blush .up { display: block; }
@@ -1541,14 +1543,22 @@ body.five #crab .down { display: none; }
     return '<svg class="side" viewBox="0 0 28 14" shape-rendering="crispEdges" aria-hidden="true">'
       + '<g class="laptop">' + R(18, 12, 6, 1, G) + R(23, 11, 2, 1, G) + R(24, 10, 2, 1, G) + R(25, 9, 2, 1, G) + R(26, 8, 2, 1, G) + R(27, 7, 1, 1, G) + '</g>'
       + '<g class="legs">' + R(1, 11, 2, 1, D) + R(0, 12, 2, 2, D) + R(5, 11, 2, 1, L) + R(4, 12, 2, 2, L) + R(11, 11, 2, 1, L) + R(10, 12, 2, 2, L) + R(15, 11, 2, 1, L) + R(14, 12, 2, 2, L) + '</g>'
+      + '<g class="cb">' + R(18, 7, 3, 4, D) + '</g>'
       + '<g class="body">' + R(1, 0, 4, 11, D) + R(5, 0, 12, 11, L)
       + '<g class="se">' + R(7, 3, 2, 2, E) + R(15, 3, 2, 2, E) + '</g>'
       + '<g class="ss">' + R(7, 4.3, 2, 0.6, E) + R(15, 4.3, 2, 0.6, E) + '</g>'
       + '<g class="sb">' + R(9.4, 5.6, 1.8, 0.7, P) + '</g>'
-      + '<g class="claw">' + R(17, 6, 3, 4, L) + R(20, 7, 1, 4, D) + R(17, 10, 4, 1, D) + '</g></g></svg>';
+      + '<g class="glasses" fill="none" stroke="#e6ecf2" stroke-width=".28"><rect x="6.5" y="2.5" width="3" height="3"/><rect x="14.5" y="2.5" width="3" height="3"/><path d="M9.5 3.8H14.5M6.5 3.4H2.2"/></g>'
+      + '<g class="shades"><rect x="6.3" y="2.6" width="3.4" height="2.6" fill="#111"/><rect x="14.3" y="2.6" width="3.2" height="2.6" fill="#111"/><path d="M9.7 3.6H14.3M6.3 3.3H2.2" stroke="#111" stroke-width=".35"/><rect x="6.8" y="3" width=".6" height=".4" fill="#f4f4f2"/></g>'
+      + '<g class="cf">' + R(17, 6, 3, 4, L) + '</g></g></svg>';
   })();
   function buildWorkCrab() {
     wcrab.innerHTML = SIDE;
+    // 眼镜是它的记号：戴墨镜就换墨镜，眼镜被摘了就不戴
+    const sh = crabEl.classList.contains('w-shades'), bare = crabEl.classList.contains('bare');
+    wcrab.querySelector('.shades').style.display = sh ? '' : 'none';
+    wcrab.querySelector('.glasses').style.display = sh || bare ? 'none' : '';
+    if (sh) wcrab.querySelectorAll('.se').forEach(n => n.style.display = 'none');
   }
   function frontPeek(on) {
     const old = $('#wfront'); if (old) old.remove();
