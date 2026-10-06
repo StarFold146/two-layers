@@ -1290,7 +1290,13 @@ body.five #crab .down { display: none; }
     if (keep && layers.length) { layers.forEach(L => sizeLayer(L, true)); return; }
     resetLayers(1); restored = false;
     let w = null; try { w = await GDB.getWip(); } catch (e) {}
-    if (w && w.layers && w.layers.length) {
+    if (await loadLayers(w)) { restored = true; return; }
+    let src = null; try { src = localStorage.getItem('crab-art'); } catch (e) {}
+    if (src) { const im = new Image(); im.onload = () => { putImg(layers[0], im); restored = true; saveArt(); }; im.src = src; }
+  }
+  async function loadLayers(w) {
+    if (!w || !w.layers || !w.layers.length) return false;
+    {
       resetLayers(w.layers.length);
       await Promise.all(w.layers.map((it, i) => new Promise(res => {
         const L = layers[i]; L.name = it.name || L.name; L.vis = it.vis !== false; L.cv.style.visibility = L.vis ? '' : 'hidden';
@@ -1299,10 +1305,9 @@ body.five #crab .down { display: none; }
         im.onload = () => { putImg(L, im); URL.revokeObjectURL(u); res(); }; im.onerror = () => res(); im.src = u;
       })));
       layerSeq = Math.max(layers.length + 1, ...layers.map(L => (+String(L.name).replace(/\D/g, '') || 0) + 1));
-      useLayer(Math.min(w.active || 0, layers.length - 1)); restored = true; return;
+      useLayer(Math.min(w.active || 0, layers.length - 1));
     }
-    let src = null; try { src = localStorage.getItem('crab-art'); } catch (e) {}
-    if (src) { const im = new Image(); im.onload = () => { putImg(layers[0], im); restored = true; saveArt(); }; im.src = src; }
+    return true;
   }
   function saveArt() {
     clearTimeout(saveT);
@@ -1448,7 +1453,9 @@ body.five #crab .down { display: none; }
     if (!dirty && !hung) { sSay(pickOne(['还是空的呢。', '先画两笔再挂。']), 1800); return; }
     if (hung && !dirty) { sSay('这张已经挂上了。', 1800); return; }
     try {
-      const blob = await artBlob(); await GDB.add({ t: Date.now(), blob });
+      const blob = await artBlob();
+      const lb = await Promise.all(layers.map(L => new Promise(res => L.cv.toBlob(res, 'image/png'))));
+      await GDB.add({ t: Date.now(), blob, active, layers: layers.map((L, i) => ({ name: L.name, vis: L.vis, blob: lb[i] })) });
       const n = (await GDB.all()).length; dirty = false; hung = true;
       sSay(pickOne([`挂好了，第 ${n} 张。`, '挂在最显眼的地方。', '这张我喜欢。']), 2400);
     } catch (e) { sSay('这个浏览器不让我挂画。', 2400); }
@@ -1487,9 +1494,9 @@ body.five #crab .down { display: none; }
     try { await GDB.del(viewing.id); } catch (x) {}
     $('#viewer').hidden = true; viewing = null; openGallery(pickOne(['取下来了，收在我这儿。', '墙上空出一块。']));
   });
-  $('#viewcont').addEventListener('click', () => {
-    resetLayers(1); putImg(layers[0], $('#viewimg'));
-    saveArt(); dirty = false; hung = true;
+  $('#viewcont').addEventListener('click', async () => {
+    if (!(viewing && await loadLayers(viewing))) { resetLayers(1); putImg(layers[0], $('#viewimg')); }
+    saveArt(); dirty = false; hung = true; if (!$('#layerpanel').hidden) renderLayers();
     $('#viewer').hidden = true; $('#gallery').hidden = true; viewing = null;
     sSay(pickOne(['接着画。改完记得再挂一次。', '取下来接着画。']), 2400);
   });
