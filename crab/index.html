@@ -278,6 +278,20 @@ body.five #crab .down { display: none; }
 #stage.shake { animation: shake 0.35s steps(4); }
 @keyframes shake { 25% { transform: translate(-5px, 2px); } 50% { transform: translate(5px, -2px); } 75% { transform: translate(-2px, -3px); } }
 #arena button:focus-visible { outline: 2px solid #e8c547; outline-offset: 2px; }
+/* 画廊：画室里画好的挂到一面墙上，存在这个浏览器里 */
+#gallery, #viewer { position: fixed; inset: 0; z-index: 9; display: flex; flex-direction: column; gap: 10px; background: #e9e1d3; color: var(--ink); padding: calc(10px + env(safe-area-inset-top, 0px)) 16px calc(14px + env(safe-area-inset-bottom, 0px)); overflow-y: auto; }
+#gallery .back, #gallery .ghost, #viewer .back, #viewer .ghost { color: var(--soft); }
+#galline { max-width: 760px; width: 100%; margin: 0 auto; min-height: 1.5em; font-size: 14px; color: var(--soft); text-align: center; }
+#galwall { display: grid; grid-template-columns: repeat(auto-fill, minmax(138px, 1fr)); gap: 24px 18px; max-width: 760px; width: 100%; margin: 0 auto; padding: 6px 2px 24px; }
+.card { font: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: center; color: inherit; }
+.card .frame { display: block; background: #fffdf9; padding: 6px; border: 6px solid var(--fc, #8a5a3c); box-shadow: 0 7px 14px rgba(42, 37, 34, 0.2); }
+.card img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; }
+.card .plaque { display: inline-block; margin-top: 8px; padding: 1px 8px; font-size: 12px; letter-spacing: 0.08em; color: var(--soft); background: rgba(251, 247, 240, 0.7); border: 1px solid var(--edge); border-radius: 3px; }
+.card:focus-visible { outline: 2px solid var(--shell); outline-offset: 4px; }
+#galempty { text-align: center; color: var(--soft); font-size: 14px; margin-top: 18vh; }
+#viewframe { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; }
+#viewframe img { max-width: 100%; max-height: 100%; box-sizing: border-box; background: #fffdf9; padding: 8px; border: 10px solid var(--fc, #8a5a3c); box-shadow: 0 10px 26px rgba(42, 37, 34, 0.22); }
+#viewbtns { display: flex; justify-content: center; gap: 10px; }
 /* 工作陪伴：衣柜上面一台小电脑，点进去它陪你干活 */
 #pcbtn {
   position: fixed; left: 12px; bottom: calc(62px + env(safe-area-inset-bottom, 0px)); z-index: 5;
@@ -441,8 +455,21 @@ body.five #crab .down { display: none; }
       <div id="pad2" tabindex="0" role="application" aria-label="调色板。左右换色相，上下换明暗，方向键也可以。"><i id="dot2"></i></div>
       <div class="satrow2"><label for="sat2">浓淡</label><input id="sat2" type="range" min="0" max="100" value="60"></div>
     </div>
+    <div class="toolrow"><button class="pill" type="button" id="hangbtn">挂进画廊</button><button class="pill" type="button" id="galbtn">画廊</button></div>
   </div>
 </section>
+<section id="gallery" aria-label="画廊" hidden>
+  <div class="topbar"><button class="back" type="button" id="galback">← 回画室</button><h2>画廊</h2><span class="ghost" id="galcount"></span></div>
+  <div id="galline" aria-live="polite"></div>
+  <div id="galwall"></div>
+  <div id="galempty" hidden>墙上还空着。</div>
+</section>
+<section id="viewer" aria-label="看画" hidden>
+  <div class="topbar"><button class="back" type="button" id="viewback">← 回画廊</button><h2 id="viewtitle"></h2><button class="ghost" type="button" id="viewdel">取下来</button></div>
+  <div id="viewframe"><img id="viewimg" alt=""></div>
+  <div id="viewbtns"><button class="pill" type="button" id="viewcont">接着画这张</button></div>
+</section>
+
 <section id="arena" aria-label="对战" hidden>
   <div class="topbar"><button class="back" type="button" id="arenaback">← 回去</button><h2>VS</h2><span class="ghost" id="record"></span></div>
   <div id="stage">
@@ -1263,7 +1290,7 @@ body.five #crab .down { display: none; }
     last = p;
   });
   const artUp = () => {
-    if (!last) return; last = null; saveArt();
+    if (!last) return; last = null; saveArt(); dirty = true;
     strokes++; if (strokes % 12 === 0 && Math.random() < 0.7) sSay(PEEKS(), 2200);
   };
   art.addEventListener('pointerup', artUp); art.addEventListener('pointercancel', artUp);
@@ -1271,7 +1298,7 @@ body.five #crab .down { display: none; }
     const b = e.currentTarget;
     if (!clearArm) { clearArm = true; b.textContent = '再点一下'; setTimeout(() => { clearArm = false; b.textContent = '擦掉'; }, 2200); return; }
     clearArm = false; b.textContent = '擦掉';
-    const r = art.getBoundingClientRect(); ground(artc, r.width, r.height); try { localStorage.removeItem('crab-art'); } catch (x) {}
+    const r = art.getBoundingClientRect(); ground(artc, r.width, r.height); dirty = false; hung = false; try { localStorage.removeItem('crab-art'); } catch (x) {}
     sSay(pickOne(['好，重新来。', '新的一张。', '擦干净了，像没画过。']), 2000);
   });
   function openStudio() {
@@ -1282,8 +1309,85 @@ body.five #crab .down { display: none; }
     requestAnimationFrame(() => { sizeArt(false); sSay(pickOne(['画布绷好了。', '一起画。你画你的，我看着。', '颜料随便用。']), 2800); });
   }
   $('#studioback').addEventListener('click', () => {
-    saveArt(); leave(studio);
+    saveArt(); $('#gallery').hidden = true; $('#viewer').hidden = true; leave(studio);
     happy(); say(strokes ? pickOne(['画得真好，我收着了。', '下次接着画，我给你留着。', '记得洗笔。']) : '下次再画。', 2600);
+  });
+  // ---------------- 画廊：画好的挂到墙上，存进这个浏览器的 IndexedDB ----------------
+  let dirty = false, hung = false;
+  const GDB = (() => {
+    let p = null;
+    const open = () => p || (p = new Promise((res, rej) => {
+      const r = indexedDB.open('crab-gallery', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('art', { keyPath: 'id', autoIncrement: true });
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    }));
+    const run = async (mode, fn) => { const db = await open(); return new Promise((res, rej) => { const t = db.transaction('art', mode), q = fn(t.objectStore('art')); t.oncomplete = () => res(q.result); t.onerror = () => rej(t.error); }); };
+    return { add: (o) => run('readwrite', s => s.add(o)), all: () => run('readonly', s => s.getAll()), del: (id) => run('readwrite', s => s.delete(id)) };
+  })();
+  const FRAMES = ['#8a5a3c', '#c9a45c', '#2f3b5c', '#6b4630', '#7a8a6a'];
+  const fdate = (t) => { const d = new Date(t); return `${d.getMonth() + 1}月${d.getDate()}日`; };
+  let galUrls = [], viewing = null, delArm = false;
+  function artBlob() {
+    return new Promise(res => {
+      const k = Math.min(1, 1400 / Math.max(art.width, art.height)), c = document.createElement('canvas');
+      c.width = Math.round(art.width * k); c.height = Math.round(art.height * k);
+      const g = c.getContext('2d'); g.fillStyle = '#f3ecdf'; g.fillRect(0, 0, c.width, c.height);
+      g.drawImage(art, 0, 0, c.width, c.height); c.toBlob(res, 'image/jpeg', 0.88);
+    });
+  }
+  $('#hangbtn').addEventListener('click', async () => {
+    let saved = false; try { saved = !!localStorage.getItem('crab-art'); } catch (e) {}
+    if (!dirty && !hung && saved) dirty = true;   // 上次没画完、留在画布上的那张也能挂
+    if (!dirty && !hung) { sSay(pickOne(['还是空的呢。', '先画两笔再挂。']), 1800); return; }
+    if (hung && !dirty) { sSay('这张已经挂上了。', 1800); return; }
+    try {
+      const blob = await artBlob(); await GDB.add({ t: Date.now(), blob });
+      const n = (await GDB.all()).length; dirty = false; hung = true;
+      sSay(pickOne([`挂好了，第 ${n} 张。`, '挂在最显眼的地方。', '这张我喜欢。']), 2400);
+    } catch (e) { sSay('这个浏览器不让我挂画。', 2400); }
+  });
+  async function openGallery(line) {
+    galUrls.forEach(u => URL.revokeObjectURL(u)); galUrls = [];
+    let list = []; try { list = await GDB.all(); } catch (e) {}
+    list.sort((a, b) => b.t - a.t);
+    const wall = $('#galwall'); wall.replaceChildren();
+    list.forEach((it, i) => {
+      const u = URL.createObjectURL(it.blob); galUrls.push(u);
+      const no = list.length - i, fc = FRAMES[it.id % FRAMES.length];
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'card'; b.style.setProperty('--fc', fc);
+      b.setAttribute('aria-label', `第 ${no} 号，${fdate(it.t)}`);
+      b.innerHTML = '<span class="frame"><img alt=""></span><span class="plaque"></span>';
+      b.querySelector('img').src = u; b.querySelector('.plaque').textContent = `No.${no} · ${fdate(it.t)}`;
+      b.addEventListener('click', () => openViewer(it, no, u, fc));
+      wall.appendChild(b);
+    });
+    $('#galempty').hidden = list.length > 0; $('#galcount').textContent = list.length ? `${list.length} 张` : '';
+    $('#galline').textContent = line || (list.length ? pickOne([`一共 ${list.length} 张了。`, '都是你画的。', '我每天来看一遍。']) : '墙上还空着，等你。');
+    $('#gallery').hidden = false;
+  }
+  function openViewer(it, no, u, fc) {
+    viewing = it; delArm = false; $('#viewdel').textContent = '取下来';
+    $('#viewimg').src = u; $('#viewimg').alt = `第 ${no} 号`; $('#viewframe').style.setProperty('--fc', fc);
+    $('#viewimg').style.setProperty('--fc', fc); $('#viewtitle').textContent = `No.${no}`;
+    $('#viewer').hidden = false;
+  }
+  $('#galbtn').addEventListener('click', () => openGallery());
+  $('#galback').addEventListener('click', () => { $('#gallery').hidden = true; galUrls.forEach(u => URL.revokeObjectURL(u)); galUrls = []; });
+  $('#viewback').addEventListener('click', () => { $('#viewer').hidden = true; viewing = null; });
+  $('#viewdel').addEventListener('click', async (e) => {
+    const b = e.currentTarget; if (!viewing) return;
+    if (!delArm) { delArm = true; b.textContent = '再点一下'; setTimeout(() => { delArm = false; b.textContent = '取下来'; }, 2200); return; }
+    try { await GDB.del(viewing.id); } catch (x) {}
+    $('#viewer').hidden = true; viewing = null; openGallery(pickOne(['取下来了，收在我这儿。', '墙上空出一块。']));
+  });
+  $('#viewcont').addEventListener('click', () => {
+    const img = $('#viewimg'), r = art.getBoundingClientRect();
+    ground(artc, r.width, r.height);
+    const k = Math.max(art.width / img.naturalWidth, art.height / img.naturalHeight);
+    artc.save(); artc.setTransform(1, 0, 0, 1, 0, 0); artc.drawImage(img, (art.width - img.naturalWidth * k) / 2, (art.height - img.naturalHeight * k) / 2, img.naturalWidth * k, img.naturalHeight * k); artc.restore();
+    saveArt(); dirty = false; hung = true;
+    $('#viewer').hidden = true; $('#gallery').hidden = true; viewing = null;
+    sSay(pickOne(['接着画。改完记得再挂一次。', '取下来接着画。']), 2400);
   });
   let rzA; addEventListener('resize', () => { if (studio.hidden) return; clearTimeout(rzA); rzA = setTimeout(() => sizeArt(true), 200); });
 
