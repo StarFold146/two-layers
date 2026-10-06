@@ -274,6 +274,10 @@ body.five #crab .down { display: none; }
 .gauge i { display: block; height: 100%; width: 100%; background: #6fcf6a; transition: width 0.6s steps(10); }
 .gauge.low i { background: #e8c547; } .gauge.crit i { background: #e0566b; }
 .gauge.mp i { background: #5ec4e8; }
+.gauge.xp { height: 5px; } .gauge.xp i { background: #e8c547; }
+.skill small.d { font-family: inherit; font-size: 11px; color: #cfc8bc; }
+.skill.learn { flex-direction: column; align-items: flex-start; gap: 3px; }
+#arena { overflow-y: auto; }
 .plate .num { text-align: right; margin-top: 1px; }
 .dmg { position: absolute; font-family: "Silkscreen", monospace; font-size: 18px; color: #fff; text-shadow: 2px 2px 0 #1d1b26; pointer-events: none; animation: dmgup 0.9s steps(6) forwards; }
 .dmg.heal { color: #9be89a; }
@@ -490,8 +494,8 @@ body.five #crab .down { display: none; }
     <canvas id="stagebg" aria-hidden="true"></canvas>
     <div class="fighter" id="foe" aria-hidden="true"></div>
     <div class="fighter" id="me" aria-hidden="true"></div>
-    <div class="plate" id="foeplate"><div class="nm"><span>螃蟹</span><span class="lv">Lv5</span></div><div class="row"><span class="lab">HP</span><span class="gauge" id="foehp"><i></i></span></div><div class="row"><span class="lab">MP</span><span class="gauge mp" id="foemp"><i></i></span></div></div>
-    <div class="plate" id="meplate"><div class="nm"><button type="button" id="mename" class="nmbtn" aria-label="你的名字，点一下可以改"></button><span class="lv" id="melv"></span></div><div class="row"><span class="lab">HP</span><span class="gauge" id="mehp"><i></i></span></div><div class="row"><span class="lab">MP</span><span class="gauge mp" id="memp"><i></i></span></div><div class="num" id="menum"></div></div>
+    <div class="plate" id="foeplate"><div class="nm"><span>螃蟹</span><span class="lv" id="foelv">Lv5</span></div><div class="row"><span class="lab">HP</span><span class="gauge" id="foehp"><i></i></span></div><div class="row"><span class="lab">MP</span><span class="gauge mp" id="foemp"><i></i></span></div></div>
+    <div class="plate" id="meplate"><div class="nm"><button type="button" id="mename" class="nmbtn" aria-label="你的名字，点一下可以改"></button><span class="lv" id="melv"></span></div><div class="row"><span class="lab">HP</span><span class="gauge" id="mehp"><i></i></span></div><div class="row"><span class="lab">MP</span><span class="gauge mp" id="memp"><i></i></span></div><div class="row"><span class="lab">EXP</span><span class="gauge xp" id="mexp"><i></i></span></div><div class="num" id="menum"></div></div>
   </div>
   <div id="msg" role="status" aria-live="polite"></div>
   <div id="skills"></div>
@@ -1608,6 +1612,34 @@ body.five #crab .down { display: none; }
   let st = null, tok = 0, typing = null;
   let myName = '挑战者', named = false; try { const v = localStorage.getItem('crab-pvp-name'); if (v) { myName = v; named = true; } } catch (e) {}
   let rec = { w: 0, l: 0 }; try { rec = Object.assign(rec, JSON.parse(localStorage.getItem('crab-pvp') || '{}')); } catch (e) {}
+  // 等级：赢一局 40 经验，输一局 15，升一级要的经验一级比一级多。
+  // 每升一级血、蓝、攻击都涨一点；螃蟹至少 5 级，你超过它它就跟着涨，但涨得比你慢。3、5、10 级各学一个新招
+  if (rec.xp == null) rec.xp = (rec.w || 0) * 40 + (rec.l || 0) * 15;
+  rec.learned = rec.learned || [];
+  const needXp = (lv) => 20 + 10 * lv;
+  function lvOf(xp) { let lv = 1; while (xp >= needXp(lv) && lv < 99) { xp -= needXp(lv); lv++; } return { lv, into: xp, need: needXp(lv) }; }
+  const myLv = () => lvOf(rec.xp).lv;
+  const MAXHP = () => 100 + 6 * (myLv() - 1), MAXMP = () => 30 + 2 * (myLv() - 1), ATK = () => 1 + 0.04 * (myLv() - 1);
+  const foeLv = () => Math.max(5, myLv()), FOEHP = () => 100 + 4 * (foeLv() - 5), FOEATK = () => 1 + 0.03 * (foeLv() - 5);
+  const UNLOCK = [3, 5, 10];
+  const saveRec = () => { try { localStorage.setItem('crab-pvp', JSON.stringify(rec)); } catch (e) {} };
+  const owed = () => UNLOCK.filter(l => l <= myLv()).length - rec.learned.length;
+  async function multiFoe(n, lo, hi, miss) { for (let i = 0; i < n && st.foe.hp > 0; i++) await hitFoe(lo, hi, miss); }
+  function learnSkill() {
+    return new Promise(res => {
+      const left = EXTRA.filter(k => !rec.learned.includes(k.id)); if (!left.length) return res();
+      const box = $('#skills'); box.replaceChildren(); clearInterval(typing);
+      $('#msg').textContent = left.length > 1 ? '可以学一个新招了，挑一个：' : '最后一招也能学了：';
+      left.forEach(k => {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'skill learn';
+        b.innerHTML = '<span></span><small class="d"></small>'; b.firstChild.textContent = k.name; b.lastChild.textContent = `MP ${k.mp} · ${k.desc}`;
+        b.addEventListener('click', async () => { rec.learned.push(k.id); saveRec(); box.replaceChildren(); await tell(`学会了「${k.name}」！`); res(); });
+        box.appendChild(b);
+      });
+    });
+  }
+  const mySkills = () => MINE.concat(EXTRA.filter(k => rec.learned.includes(k.id)));
+
   const rint = (a, b) => Math.floor(rnd(a, b + 1));
   const wait = (ms) => { const t = tok; return new Promise(res => setTimeout(() => { if (t === tok) res(); }, reduce ? Math.min(ms, 120) : ms)); };
   function tell(text) {
@@ -1620,9 +1652,11 @@ body.five #crab .down { display: none; }
   }
   function gauges() {
     const set = (id, v, max, hp) => { const g = $(id); g.firstElementChild.style.width = (v / max * 100) + '%'; if (hp) { g.classList.toggle('low', v / max <= 0.5 && v / max > 0.2); g.classList.toggle('crit', v / max <= 0.2); } };
-    set('#foehp', st.foe.hp, 100, true); set('#foemp', st.foe.mp, 30); set('#mehp', st.me.hp, 100, true); set('#memp', st.me.mp, 30);
-    $('#menum').textContent = `${st.me.hp}/100`;
-    const mn = $('#mename'); if (mn) mn.textContent = myName; $('#melv').textContent = 'Lv' + (1 + rec.w);
+    set('#foehp', st.foe.hp, st.foe.max, true); set('#foemp', st.foe.mp, st.foe.mmax); set('#mehp', st.me.hp, st.me.max, true); set('#memp', st.me.mp, st.me.mmax);
+    const X = lvOf(rec.xp); set('#mexp', X.into, X.need);
+    $('#menum').textContent = `${st.me.hp}/${st.me.max}`;
+    $('#melv').textContent = 'Lv' + myLv(); const fl = $('#foelv'); fl.textContent = 'Lv' + (foeLv() === 5 && fl.dataset.base ? fl.dataset.base : foeLv());
+    const mn = $('#mename'); if (mn) mn.textContent = myName;
     $('#record').textContent = `${rec.w} : ${rec.l}`;
   }
   function stageBg() {
@@ -1655,7 +1689,7 @@ body.five #crab .down { display: none; }
     float(who, '-' + n); gauges(); await wait(650); f.classList.remove('hit');
   }
   async function heal(who, n) {
-    const s = st[who]; n = Math.min(n, 100 - s.hp); if (!n) { await tell('已经是满血了。'); return; }
+    const s = st[who]; n = Math.min(n, s.max - s.hp); if (!n) { await tell('已经是满血了。'); return; }
     s.hp += n; float(who, '+' + n, true); gauges();
     await tell(who === 'foe' ? `螃蟹蜕下旧壳，回了 ${n} 点血。` : `${myName}调整呼吸，回了 ${n} 点血。`);
   }
@@ -1665,7 +1699,7 @@ body.five #crab .down { display: none; }
     await lunge('me');
     const foam = st.foam; st.foam = false;
     if (Math.random() < miss + (foam ? 0.45 : 0)) { st.charge = false; await tell(foam ? '泡沫糊住了视线，打空了！' : '被躲开了！'); return; }
-    let n = rint(lo, hi); const note = [];
+    let n = Math.round(rint(lo, hi) * ATK()); const note = [];
     if (st.charge) { st.charge = false; n *= 2; note.push('蓄满的力量一口气爆发！'); }
     const crit = Math.random() < 0.15; if (crit) { n = Math.round(n * 1.5); note.push('会心一击！'); }
     if (st.guard) { st.guard = false; n = Math.round(n * 0.5); note.push('硬壳挡下了一半伤害。'); }
@@ -1674,10 +1708,11 @@ body.five #crab .down { display: none; }
     for (const t of note) await tell(t);
   }
   async function hitMe(lo, hi, times = 1) {
+    if (st.evade) { await lunge('foe'); st.evade = false; await tell(EVADE_TXT); return; }
     let total = 0;
     for (let k = 0; k < times && st.me.hp > 0; k++) {
       await lunge('foe');
-      let n = rint(lo, hi); const crit = Math.random() < 0.12; if (crit) { n = Math.round(n * 1.5); shake(); }
+      let n = Math.round(rint(lo, hi) * FOEATK()); const crit = Math.random() < 0.12; if (crit) { n = Math.round(n * 1.5); shake(); }
       await hurt('me', n); total += n;
       if (crit) await tell('会心一击！');
     }
@@ -1689,6 +1724,12 @@ body.five #crab .down { display: none; }
     { name: '蓄力', mp: 6, run: async () => { st.charge = true; await tell(`${myName}握紧拳头，气势上升！`); await tell('下一击伤害翻倍。'); } },
     { name: '回气', mp: 10, run: () => heal('me', rint(18, 26)) },
   ];
+  const EVADE_TXT = '一个侧步，躲开了！';
+  const EXTRA = [
+    { id: 'combo', name: '连环踢', mp: 14, desc: '连踢三下', run: () => multiFoe(3, 7, 10, 0.12) },
+    { id: 'evade', name: '疾风步', mp: 10, desc: '躲开下一招', run: async () => { st.evade = true; await tell(`${myName}压低重心，脚步轻了下来。`); } },
+    { id: 'ult', name: '必杀·流星', mp: 24, desc: '一击定胜负', run: () => hitFoe(38, 48, 0.25) },
+  ];
   const THEIRS = [
     { name: '钳击', mp: 0, w: 5, run: () => hitMe(11, 17) },
     { name: '横行冲撞', mp: 8, w: 2.5, run: () => hitMe(16, 22) },
@@ -1699,7 +1740,7 @@ body.five #crab .down { display: none; }
   ];
   function skillsFor(on) {
     const box = $('#skills'); box.replaceChildren();
-    MINE.forEach(sk => {
+    mySkills().forEach(sk => {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'skill';
       b.innerHTML = `<span></span><small>${sk.mp ? 'MP ' + sk.mp : 'FREE'}</small>`; b.firstChild.textContent = sk.name;
       b.disabled = !on || st.me.mp < sk.mp;
@@ -1724,7 +1765,10 @@ body.five #crab .down { display: none; }
       $('#me').classList.add('down'); rec.l++; st.result = 'lose'; gauges();
       await tell(`${myName}倒下了……`); await tell(pickOne(['螃蟹举起钳子庆祝胜利。', '胜败乃兵家常事，再来！', '螃蟹赢了。它看起来很得意。']));
     }
-    try { localStorage.setItem('crab-pvp', JSON.stringify(rec)); } catch (e) {}
+    const before = myLv(), gain = st.result === 'win' ? 40 : 15; rec.xp += gain; saveRec(); gauges();
+    await tell(`得到 ${gain} 点经验。`);
+    if (myLv() > before) await tell(`升到 Lv${myLv()} 了！血、蓝、攻击都涨了一点。`);
+    if (owed() > 0) await learnSkill();
     endButtons(); return true;
   }
   async function myTurn(sk) {
@@ -1752,17 +1796,18 @@ body.five #crab .down { display: none; }
     nextRound();
   }
   async function nextRound() {
-    st.me.mp = Math.min(30, st.me.mp + 5); st.foe.mp = Math.min(30, st.foe.mp + 5); gauges();
+    st.me.mp = Math.min(st.me.mmax, st.me.mp + 5); st.foe.mp = Math.min(st.foe.mmax, st.foe.mp + 5); gauges();
     st.busy = false; await tell(`${myName}要怎么做？`); if (st && !st.busy) skillsFor(true);
   }
   async function startBattle() {
     tok++;
-    st = { me: { hp: 100, mp: 30 }, foe: { hp: 100, mp: 30 }, busy: true, charge: false, foam: false, guard: false, result: null };
+    st = { me: { hp: MAXHP(), mp: MAXMP(), max: MAXHP(), mmax: MAXMP() }, foe: { hp: FOEHP(), mp: 30, max: FOEHP(), mmax: 30 }, busy: true, evade: false, charge: false, foam: false, guard: false, result: null };
     $('#foe').className = 'fighter'; $('#me').className = 'fighter';
     $('#foe').replaceChildren(crabCopy()); $('#me').innerHTML = pixSVG(CAT);
     stageBg(); gauges(); skillsFor(false);
     await tell(pickOne(['螃蟹 发起了挑战！', '野生的螃蟹跳了出来！', '战斗开始！']));
     if (!named) await tell('（点自己的名字可以改名。）');
+    if (owed() > 0) await learnSkill();
     st.busy = false; await tell(`${myName}要怎么做？`); if (!st.busy) skillsFor(true);
   }
   function openArena() {
