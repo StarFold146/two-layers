@@ -212,6 +212,17 @@ body.five #crab .down { display: none; }
 #studio .back, #studio .ghost { color: var(--soft); }
 #artwrap { position: relative; flex: 1 1 auto; min-height: 0; max-width: 760px; width: 100%; margin: 0 auto; border-radius: 4px; overflow: hidden; box-shadow: 0 2px 0 rgba(42, 37, 34, 0.12), 0 12px 30px rgba(42, 37, 34, 0.14); }
 #art { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+.layer { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+#layerpanel { display: flex; flex-direction: column; gap: 8px; }
+#layerlist { display: flex; flex-direction: column; gap: 6px; max-height: 28vh; overflow-y: auto; }
+.lrow { display: flex; align-items: center; gap: 8px; padding: 4px 8px; border: 1px solid var(--edge); border-radius: 10px; background: #fffdf9; }
+.lrow.on { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+.leye, .lname { font: inherit; background: none; border: 0; cursor: pointer; color: var(--ink); padding: 2px 4px; }
+.leye { width: 1.8em; color: var(--shell); }
+.lname { flex: 1; text-align: left; font-size: 14px; }
+.lthumb { width: 27px; height: 36px; border: 1px solid var(--edge); border-radius: 3px; background: #f3ecdf; }
+#tools .pill:disabled { opacity: 0.4; cursor: default; }
+
 #scrab { position: absolute; right: 8px; bottom: 4px; width: 58px; pointer-events: none; }
 #scrab svg { width: 100%; height: auto; display: block; overflow: visible; }
 #sbubble {
@@ -455,7 +466,9 @@ body.five #crab .down { display: none; }
       <div id="pad2" tabindex="0" role="application" aria-label="调色板。左右换色相，上下换明暗，方向键也可以。"><i id="dot2"></i></div>
       <div class="satrow2"><label for="sat2">浓淡</label><input id="sat2" type="range" min="0" max="100" value="60"></div>
     </div>
-    <div class="toolrow"><span role="group" aria-label="笔" class="toolrow" id="kinds"><button class="pill" type="button" data-k="oil" aria-pressed="true">油画</button><button class="pill" type="button" data-k="pencil" aria-pressed="false">铅笔</button></span><span style="flex:1"></span><button class="pill" type="button" id="hangbtn">挂进画廊</button><button class="pill" type="button" id="galbtn">画廊</button></div>
+    <div class="toolrow"><span role="group" aria-label="笔" class="toolrow" id="kinds"><button class="pill" type="button" data-k="oil" aria-pressed="true">油画</button><button class="pill" type="button" data-k="pencil" aria-pressed="false">铅笔</button><button class="pill" type="button" data-k="eraser" aria-pressed="false">橡皮</button></span><span style="flex:1"></span><button class="pill" type="button" id="layerbtn" aria-pressed="false">图层</button></div>
+    <div id="layerpanel" hidden><div id="layerlist"></div><div class="toolrow"><button class="pill" type="button" id="laddbtn">＋ 新图层</button><button class="pill" type="button" id="lupbtn" aria-label="往上挪">↑</button><button class="pill" type="button" id="ldownbtn" aria-label="往下挪">↓</button><span style="flex:1"></span><button class="pill" type="button" id="ldelbtn">删这层</button></div></div>
+    <div class="toolrow"><span style="flex:1"></span><button class="pill" type="button" id="hangbtn">挂进画廊</button><button class="pill" type="button" id="galbtn">画廊</button></div>
   </div>
 </section>
 <section id="gallery" aria-label="画廊" hidden>
@@ -1188,7 +1201,8 @@ body.five #crab .down { display: none; }
   function leave(el) { el.hidden = true; away = false; closet.hidden = true; }
 
   // ---------------- 画室：莫奈的笔触，一笔是一簇短短的色块 ----------------
-  const studio = $('#studio'), art = $('#art'), artc = art.getContext('2d', { willReadFrequently: true });
+  const studio = $('#studio'), paper = $('#art'), paperc = paper.getContext('2d');
+  let layers = [], active = 0, art = null, artc = null, restored = false, layerSeq = 2;
   const PAINTS = [['睡莲粉', 340, 62, 78], ['晨雾紫', 268, 34, 70], ['洋红', 322, 68, 50], ['靛蓝', 240, 52, 36], ['深夜蓝', 226, 58, 24], ['塞纳蓝', 210, 55, 52], ['水面青', 180, 42, 50], ['柳绿', 96, 38, 50], ['干草黄', 44, 78, 66], ['落日橙', 22, 85, 60], ['罂粟红', 4, 72, 52], ['奶油白', 40, 60, 93]];
   let ink = { h: 340, s: 62, l: 78 }, inkName = '睡莲粉', brush = 16, strokes = 0, sbT = null, saveT = null, clearArm = false;
   function hslRgb(h, s, l) { s /= 100; l /= 100; const k = (n) => (n + h / 30) % 12, a = s * Math.min(l, 1 - l), f = (n) => l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1)); return [f(0), f(8), f(4)].map(v => Math.round(v * 255)); }
@@ -1246,21 +1260,65 @@ body.five #crab .down { display: none; }
     for (let i = 0; i < w * h / 90; i++) { c.globalAlpha = rnd(0.03, 0.08); c.fillStyle = Math.random() < 0.5 ? '#b8a88e' : '#ffffff'; c.fillRect(Math.random() * w, Math.random() * h, rnd(2, 6), 1); }
     c.globalAlpha = 1;
   }
-  function sizeArt(keep) {
-    const r = $('#artwrap').getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
-    let old = null; if (keep && art.width) { old = document.createElement('canvas'); old.width = art.width; old.height = art.height; old.getContext('2d').drawImage(art, 0, 0); }
-    art.width = Math.max(1, Math.round(r.width * dpr)); art.height = Math.max(1, Math.round(r.height * dpr));
-    artc.setTransform(dpr, 0, 0, dpr, 0, 0); ground(artc, r.width, r.height);
-    const put = (img) => { const k = Math.max(art.width / img.width, art.height / img.height); artc.save(); artc.setTransform(1, 0, 0, 1, 0, 0); artc.drawImage(img, (art.width - img.width * k) / 2, (art.height - img.height * k) / 2, img.width * k, img.height * k); artc.restore(); };
-    if (old) put(old);
-    else { let src = null; try { src = localStorage.getItem('crab-art'); } catch (e) {} if (src) { const im = new Image(); im.onload = () => put(im); im.src = src; } }
+  // 图层：纸在最底下（#art 只画纸纹），上面一张张透明画布，笔只落在选中的那一层
+  function mkLayer(name) {
+    const cv = document.createElement('canvas'); cv.className = 'layer'; cv.setAttribute('aria-hidden', 'true');
+    $('#artwrap').insertBefore(cv, $('#sbubble'));
+    const L = { cv, ctx: cv.getContext('2d', { willReadFrequently: true }), name, vis: true };
+    sizeLayer(L); return L;
   }
-  function saveArt() { clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem('crab-art', art.toDataURL('image/jpeg', 0.85)); } catch (e) {} }, 500); }
+  function sizeLayer(L, keep) {
+    const r = $('#artwrap').getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
+    let old = null; if (keep && L.cv.width) { old = document.createElement('canvas'); old.width = L.cv.width; old.height = L.cv.height; old.getContext('2d').drawImage(L.cv, 0, 0); }
+    L.cv.width = Math.max(1, Math.round(r.width * dpr)); L.cv.height = Math.max(1, Math.round(r.height * dpr));
+    L.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (old) putImg(L, old);
+  }
+  function putImg(L, img) {
+    const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height, k = Math.max(L.cv.width / w, L.cv.height / h);
+    L.ctx.save(); L.ctx.setTransform(1, 0, 0, 1, 0, 0); L.ctx.drawImage(img, (L.cv.width - w * k) / 2, (L.cv.height - h * k) / 2, w * k, h * k); L.ctx.restore();
+  }
+  function useLayer(i) { active = Math.max(0, Math.min(layers.length - 1, i)); art = layers[active].cv; artc = layers[active].ctx; renderLayers(); }
+  function resetLayers(n = 1) { layers.forEach(L => L.cv.remove()); layers = []; for (let i = 0; i < n; i++) layers.push(mkLayer(`图层 ${i + 1}`)); layerSeq = n + 1; useLayer(0); }
+  function sizePaper() {
+    const r = $('#artwrap').getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
+    paper.width = Math.max(1, Math.round(r.width * dpr)); paper.height = Math.max(1, Math.round(r.height * dpr));
+    paperc.setTransform(dpr, 0, 0, dpr, 0, 0); ground(paperc, r.width, r.height);
+  }
+  async function sizeArt(keep) {
+    sizePaper();
+    if (keep && layers.length) { layers.forEach(L => sizeLayer(L, true)); return; }
+    resetLayers(1); restored = false;
+    let w = null; try { w = await GDB.getWip(); } catch (e) {}
+    if (w && w.layers && w.layers.length) {
+      resetLayers(w.layers.length);
+      await Promise.all(w.layers.map((it, i) => new Promise(res => {
+        const L = layers[i]; L.name = it.name || L.name; L.vis = it.vis !== false; L.cv.style.visibility = L.vis ? '' : 'hidden';
+        if (!it.blob) return res();
+        const u = URL.createObjectURL(it.blob), im = new Image();
+        im.onload = () => { putImg(L, im); URL.revokeObjectURL(u); res(); }; im.onerror = () => res(); im.src = u;
+      })));
+      layerSeq = Math.max(layers.length + 1, ...layers.map(L => (+String(L.name).replace(/\D/g, '') || 0) + 1));
+      useLayer(Math.min(w.active || 0, layers.length - 1)); restored = true; return;
+    }
+    let src = null; try { src = localStorage.getItem('crab-art'); } catch (e) {}
+    if (src) { const im = new Image(); im.onload = () => { putImg(layers[0], im); restored = true; saveArt(); }; im.src = src; }
+  }
+  function saveArt() {
+    clearTimeout(saveT);
+    saveT = setTimeout(async () => {
+      try {
+        const blobs = await Promise.all(layers.map(L => new Promise(res => L.cv.toBlob(res, 'image/png'))));
+        await GDB.putWip({ k: 'wip', active, layers: layers.map((L, i) => ({ name: L.name, vis: L.vis, blob: blobs[i] })) });
+        localStorage.removeItem('crab-art');
+      } catch (e) {}
+    }, 700);
+  }
   // 一下笔：几根毛的短色块，颜色每块都抖一点，再沾一点底下没干的颜色
   function dabAt(x, y, ang, size) {
     const dpr = art.width / art.getBoundingClientRect().width;
     let under = null;
-    try { const d = artc.getImageData(Math.round(x * dpr), Math.round(y * dpr), 1, 1).data; under = [d[0], d[1], d[2]]; } catch (e) {}
+    try { const d = artc.getImageData(Math.round(x * dpr), Math.round(y * dpr), 1, 1).data; if (d[3] > 40) under = [d[0], d[1], d[2]]; } catch (e) {}
     const len = size * rnd(1.1, 1.9), th = size * rnd(0.45, 0.7), n = 4;
     const dh = Math.random() < 0.15 ? rnd(-26, 26) : rnd(-7, 7), dl = rnd(-8, 8), ds = rnd(-8, 8);
     artc.save(); artc.translate(x, y); artc.rotate(ang + rnd(-0.35, 0.35));
@@ -1299,18 +1357,34 @@ body.five #crab .down { display: none; }
     }
     artc.globalAlpha = 1;
   }
+  // 橡皮：只擦选中的这一层，边是软的
+  const ERASE_R = { 8: 5, 16: 11, 30: 22 };
+  function eraseSeg(ax, ay, bx, by) {
+    const r = ERASE_R[brush] || 11, d = Math.hypot(bx - ax, by - ay), steps = Math.max(1, Math.ceil(d / (r * 0.3)));
+    artc.save(); artc.globalCompositeOperation = 'destination-out';
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps, x = ax + (bx - ax) * t, y = ay + (by - ay) * t, g = artc.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, 'rgba(0,0,0,0.9)'); g.addColorStop(0.7, 'rgba(0,0,0,0.6)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      artc.fillStyle = g; artc.beginPath(); artc.arc(x, y, r, 0, Math.PI * 2); artc.fill();
+    }
+    artc.restore();
+  }
   const press = (e) => (e.pressure && e.pointerType === 'pen' ? 0.5 + e.pressure : 1);
   let last = null, carry = 0;
-  art.addEventListener('pointerdown', (e) => {
-    try { art.setPointerCapture(e.pointerId); } catch (x) {}
-    const r = art.getBoundingClientRect(); last = { x: e.clientX - r.left, y: e.clientY - r.top }; carry = 0;
-    if (brushKind === 'pencil') pencilSeg(last.x, last.y, last.x + 0.5, last.y + 0.5, press(e));
+  paper.addEventListener('pointerdown', (e) => {
+    if (!layers.length) return;
+    if (!layers[active].vis) { sSay('这一层藏起来了，先把它的圆点点亮。', 2200); return; }
+    try { paper.setPointerCapture(e.pointerId); } catch (x) {}
+    const r = paper.getBoundingClientRect(); last = { x: e.clientX - r.left, y: e.clientY - r.top }; carry = 0;
+    if (brushKind === 'eraser') eraseSeg(last.x, last.y, last.x, last.y);
+    else if (brushKind === 'pencil') pencilSeg(last.x, last.y, last.x + 0.5, last.y + 0.5, press(e));
     else dabAt(last.x, last.y, rnd(-0.6, 0.6), brush * press(e));
   });
-  art.addEventListener('pointermove', (e) => {
+  paper.addEventListener('pointermove', (e) => {
     if (!last) return;
-    const r = art.getBoundingClientRect(), p = { x: e.clientX - r.left, y: e.clientY - r.top };
+    const r = paper.getBoundingClientRect(), p = { x: e.clientX - r.left, y: e.clientY - r.top };
     const dx = p.x - last.x, dy = p.y - last.y, d = Math.hypot(dx, dy); if (d < 1) return;
+    if (brushKind === 'eraser') { eraseSeg(last.x, last.y, p.x, p.y); last = p; return; }
     if (brushKind === 'pencil') { pencilSeg(last.x, last.y, p.x, p.y, press(e)); last = p; return; }
     const ang = Math.atan2(dy, dx), step = Math.max(2, brush * 0.5), sz = brush * (e.pressure && e.pointerType === 'pen' ? 0.5 + e.pressure : 1);
     carry += d;
@@ -1318,15 +1392,15 @@ body.five #crab .down { display: none; }
     last = p;
   });
   const artUp = () => {
-    if (!last) return; last = null; saveArt(); dirty = true;
+    if (!last) return; last = null; saveArt(); dirty = true; if (!$('#layerpanel').hidden) renderLayers();
     strokes++; if (strokes % 12 === 0 && Math.random() < 0.7) sSay(PEEKS(), 2200);
   };
-  art.addEventListener('pointerup', artUp); art.addEventListener('pointercancel', artUp);
+  paper.addEventListener('pointerup', artUp); paper.addEventListener('pointercancel', artUp);
   $('#artclear').addEventListener('click', (e) => {
     const b = e.currentTarget;
     if (!clearArm) { clearArm = true; b.textContent = '再点一下'; setTimeout(() => { clearArm = false; b.textContent = '擦掉'; }, 2200); return; }
     clearArm = false; b.textContent = '擦掉';
-    const r = art.getBoundingClientRect(); ground(artc, r.width, r.height); dirty = false; hung = false; try { localStorage.removeItem('crab-art'); } catch (x) {}
+    resetLayers(1); dirty = false; hung = false; restored = false; try { localStorage.removeItem('crab-art'); } catch (x) {} saveArt();
     sSay(pickOne(['好，重新来。', '新的一张。', '擦干净了，像没画过。']), 2000);
   });
   function openStudio() {
@@ -1345,31 +1419,32 @@ body.five #crab .down { display: none; }
   const GDB = (() => {
     let p = null;
     const open = () => p || (p = new Promise((res, rej) => {
-      const r = indexedDB.open('crab-gallery', 1);
-      r.onupgradeneeded = () => r.result.createObjectStore('art', { keyPath: 'id', autoIncrement: true });
+      const r = indexedDB.open('crab-gallery', 2);
+      r.onupgradeneeded = () => { const db = r.result; if (!db.objectStoreNames.contains('art')) db.createObjectStore('art', { keyPath: 'id', autoIncrement: true }); if (!db.objectStoreNames.contains('wip')) db.createObjectStore('wip', { keyPath: 'k' }); };
       r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
     }));
-    const run = async (mode, fn) => { const db = await open(); return new Promise((res, rej) => { const t = db.transaction('art', mode), q = fn(t.objectStore('art')); t.oncomplete = () => res(q.result); t.onerror = () => rej(t.error); }); };
-    return { add: (o) => run('readwrite', s => s.add(o)), all: () => run('readonly', s => s.getAll()), del: (id) => run('readwrite', s => s.delete(id)) };
+    const run = async (store, mode, fn) => { const db = await open(); return new Promise((res, rej) => { const t = db.transaction(store, mode), q = fn(t.objectStore(store)); t.oncomplete = () => res(q.result); t.onerror = () => rej(t.error); }); };
+    return { add: (o) => run('art', 'readwrite', s => s.add(o)), all: () => run('art', 'readonly', s => s.getAll()), del: (id) => run('art', 'readwrite', s => s.delete(id)),
+      putWip: (o) => run('wip', 'readwrite', s => s.put(o)), getWip: () => run('wip', 'readonly', s => s.get('wip')) };
   })();
   const FRAMES = ['#8a5a3c', '#c9a45c', '#2f3b5c', '#6b4630', '#7a8a6a'];
   const fdate = (t) => { const d = new Date(t); return `${d.getMonth() + 1}月${d.getDate()}日`; };
   let galUrls = [], viewing = null, delArm = false;
   function artBlob() {
     return new Promise(res => {
-      const k = Math.min(1, 1400 / Math.max(art.width, art.height)), c = document.createElement('canvas');
-      c.width = Math.round(art.width * k); c.height = Math.round(art.height * k);
+      const k = Math.min(1, 1400 / Math.max(paper.width, paper.height)), c = document.createElement('canvas');
+      c.width = Math.round(paper.width * k); c.height = Math.round(paper.height * k);
       const g = c.getContext('2d'); g.fillStyle = '#f3ecdf'; g.fillRect(0, 0, c.width, c.height);
-      g.drawImage(art, 0, 0, c.width, c.height); c.toBlob(res, 'image/jpeg', 0.88);
+      g.drawImage(paper, 0, 0, c.width, c.height); layers.forEach(L => { if (L.vis) g.drawImage(L.cv, 0, 0, c.width, c.height); });
+      c.toBlob(res, 'image/jpeg', 0.88);
     });
   }
   $('#kinds').querySelectorAll('.pill').forEach(b => b.addEventListener('click', () => {
     brushKind = b.dataset.k; $('#kinds').querySelectorAll('.pill').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
-    sSay(brushKind === 'pencil' ? pickOne(['铅笔，适合打草稿。', '削好了。', '轻一点画，纸会起毛。']) : pickOne(['换回油画。', '颜料还没干，接着来。']), 1800);
+    sSay(brushKind === 'eraser' ? pickOne(['橡皮只擦选中的那一层。', '擦干净点。']) : brushKind === 'pencil' ? pickOne(['铅笔，适合打草稿。', '削好了。', '轻一点画，纸会起毛。']) : pickOne(['换回油画。', '颜料还没干，接着来。']), 1800);
   }));
   $('#hangbtn').addEventListener('click', async () => {
-    let saved = false; try { saved = !!localStorage.getItem('crab-art'); } catch (e) {}
-    if (!dirty && !hung && saved) dirty = true;   // 上次没画完、留在画布上的那张也能挂
+    if (!dirty && !hung && restored) dirty = true;   // 上次没画完、留在画布上的那张也能挂
     if (!dirty && !hung) { sSay(pickOne(['还是空的呢。', '先画两笔再挂。']), 1800); return; }
     if (hung && !dirty) { sSay('这张已经挂上了。', 1800); return; }
     try {
@@ -1413,13 +1488,44 @@ body.five #crab .down { display: none; }
     $('#viewer').hidden = true; viewing = null; openGallery(pickOne(['取下来了，收在我这儿。', '墙上空出一块。']));
   });
   $('#viewcont').addEventListener('click', () => {
-    const img = $('#viewimg'), r = art.getBoundingClientRect();
-    ground(artc, r.width, r.height);
-    const k = Math.max(art.width / img.naturalWidth, art.height / img.naturalHeight);
-    artc.save(); artc.setTransform(1, 0, 0, 1, 0, 0); artc.drawImage(img, (art.width - img.naturalWidth * k) / 2, (art.height - img.naturalHeight * k) / 2, img.naturalWidth * k, img.naturalHeight * k); artc.restore();
+    resetLayers(1); putImg(layers[0], $('#viewimg'));
     saveArt(); dirty = false; hung = true;
     $('#viewer').hidden = true; $('#gallery').hidden = true; viewing = null;
     sSay(pickOne(['接着画。改完记得再挂一次。', '取下来接着画。']), 2400);
+  });
+  // 图层面板：上面的在上，点名字选中，圆点开关显示
+  function renderLayers() {
+    const box = $('#layerlist'); if (!box) return; box.replaceChildren();
+    for (let i = layers.length - 1; i >= 0; i--) {
+      const L = layers[i], row = document.createElement('div'); row.className = 'lrow' + (i === active ? ' on' : '');
+      const eye = document.createElement('button'); eye.type = 'button'; eye.className = 'leye'; eye.textContent = L.vis ? '●' : '○';
+      eye.setAttribute('aria-label', L.vis ? `藏起${L.name}` : `显示${L.name}`);
+      eye.addEventListener('click', () => { L.vis = !L.vis; L.cv.style.visibility = L.vis ? '' : 'hidden'; renderLayers(); saveArt(); });
+      const th = document.createElement('canvas'); th.className = 'lthumb'; th.width = 54; th.height = 72; th.setAttribute('aria-hidden', 'true');
+      try { th.getContext('2d').drawImage(L.cv, 0, 0, 54, 72); } catch (e) {}
+      const nm = document.createElement('button'); nm.type = 'button'; nm.className = 'lname'; nm.textContent = L.name; nm.setAttribute('aria-pressed', String(i === active));
+      nm.addEventListener('click', () => { useLayer(i); saveArt(); });
+      row.append(eye, th, nm); box.appendChild(row);
+    }
+    $('#ldelbtn').disabled = layers.length <= 1; $('#laddbtn').disabled = layers.length >= 5;
+    $('#lupbtn').disabled = active >= layers.length - 1; $('#ldownbtn').disabled = active <= 0;
+  }
+  function restack() { layers.forEach(L => $('#artwrap').insertBefore(L.cv, $('#sbubble'))); }
+  $('#layerbtn').addEventListener('click', (e) => { const p = $('#layerpanel'); p.hidden = !p.hidden; e.currentTarget.setAttribute('aria-pressed', String(!p.hidden)); renderLayers(); });
+  $('#laddbtn').addEventListener('click', () => {
+    if (layers.length >= 5) return;
+    const L = mkLayer(`图层 ${layerSeq++}`); layers.splice(active + 1, 0, L); restack(); useLayer(active + 1); saveArt();
+    sSay(pickOne(['新的一层，透明的。', '叠一层上去。']), 1800);
+  });
+  const moveLayer = (d) => { const j = active + d; if (j < 0 || j >= layers.length) return; [layers[active], layers[j]] = [layers[j], layers[active]]; restack(); useLayer(j); saveArt(); };
+  $('#lupbtn').addEventListener('click', () => moveLayer(1)); $('#ldownbtn').addEventListener('click', () => moveLayer(-1));
+  let ldelArm = false;
+  $('#ldelbtn').addEventListener('click', (e) => {
+    const b = e.currentTarget; if (layers.length <= 1) return;
+    if (!ldelArm) { ldelArm = true; b.textContent = '再点一下'; setTimeout(() => { ldelArm = false; b.textContent = '删这层'; }, 2200); return; }
+    ldelArm = false; b.textContent = '删这层';
+    layers[active].cv.remove(); layers.splice(active, 1); useLayer(Math.min(active, layers.length - 1)); saveArt();
+    sSay('那一层撕掉了。', 1800);
   });
   let rzA; addEventListener('resize', () => { if (studio.hidden) return; clearTimeout(rzA); rzA = setTimeout(() => sizeArt(true), 200); });
 
