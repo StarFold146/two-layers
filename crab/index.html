@@ -160,6 +160,9 @@ body.five #crab .down { display: none; }
 #closetbtn:focus-visible, #closet button:focus-visible { outline: 2px solid var(--shell); outline-offset: 2px; }
 #crab.w-pumpkin .pumpkin, #crab.w-bat .bat { display: block; }
 #crab.w-pumpkin .glasses { display: none !important; }
+#crab.w-bunny .bunny { display: block; }
+#crab.hop svg { animation: hop 0.45s cubic-bezier(.3, .6, .4, 1); }
+@keyframes hop { 40% { transform: translateY(-24%); } 75% { transform: translateY(0) scale(1.06, 0.9); } }
 #crab.w-bat .wl { animation: flap 1.3s ease-in-out infinite; } #crab.w-bat .wr { animation: flap 1.3s ease-in-out -0.65s infinite; }
 @keyframes flap { 50% { transform: translateY(-0.7px); } }
 #awaynote { position: fixed; top: calc(56px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); z-index: 6; width: min(19em, 86vw); background: var(--paper); color: var(--ink); border: 1px solid var(--edge); border-radius: 14px; padding: 12px 14px 10px; font-size: 14px; line-height: 1.7; box-shadow: 0 10px 30px rgba(42, 37, 34, 0.16); animation: fistin 0.35s ease-out; }
@@ -431,7 +434,8 @@ body.five #crab .down { display: none; }
     <g class="letter"><rect x="5.1" y="-12.6" width="3.2" height="2.2" fill="#fbf7f0" stroke="#1c1a19" stroke-width=".15"/><path d="M5.1 -12.6L6.7 -11.4L8.3 -12.6" fill="none" stroke="#1c1a19" stroke-width=".15"/></g>
     <g class="flag"><rect x="6.35" y="-14.6" width=".3" height="4.8" fill="#1c1a19"/><rect x="6.65" y="-14.6" width="2.6" height="1.8" fill="#fbf7f0" stroke="#1c1a19" stroke-width=".15"/></g>
     <g class="bump" fill="#f2a6bd"><rect x="-1" y="-10.4" width="2" height="1.5"/><rect x="-0.6" y="-10.9" width="1.2" height=".6"/></g>
-<g class="acc pumpkin"><rect x="-6.77" y="-11.37" width="13.54" height="6.74" fill="#1c1a19"/><rect x="-6.6" y="-11.2" width="13.2" height="6.4" fill="#e8862e"/><rect x="-6.1" y="-11.75" width="12.2" height=".6" fill="#e8862e"/><rect x="-5" y="-12.2" width="10" height=".5" fill="#e8862e"/><rect x="-3.4" y="-11.7" width=".35" height="6.7" fill="#c4691d"/><rect x="-0.2" y="-12.1" width=".35" height="7.1" fill="#c4691d"/><rect x="3.1" y="-11.7" width=".35" height="6.7" fill="#c4691d"/><rect x="-0.4" y="-13.1" width=".9" height="1.1" fill="#5d7a3a"/><g fill="#ffd36b"><rect x="-3.4" y="-8.6" width=".9" height=".6"/><rect x="-3.8" y="-8" width="1.7" height=".6"/><rect x="-4.2" y="-7.4" width="2.5" height=".6"/><rect x="2.6" y="-8.6" width=".9" height=".6"/><rect x="2.2" y="-8" width="1.7" height=".6"/><rect x="1.8" y="-7.4" width="2.5" height=".6"/><rect x="-3" y="-6" width="6" height=".7"/></g><rect x="-1.3" y="-6" width=".6" height=".35" fill="#e8862e"/><rect x="0.9" y="-5.65" width=".6" height=".35" fill="#e8862e"/></g>
+<g class="acc bunny"><rect x="-4.17" y="-14.17" width="2.34" height="5.3" fill="#1c1a19"/><rect x="-4" y="-14" width="2" height="5.1" fill="#f6f2ec"/><rect x="-3.5" y="-13.4" width="1" height="3.9" fill="#f2a6bd"/><rect x="1.83" y="-13.17" width="2.34" height="4.3" fill="#1c1a19"/><rect x="2" y="-13" width="2" height="4.1" fill="#f6f2ec"/><rect x="2.5" y="-12.4" width="1" height="2.9" fill="#f2a6bd"/><rect x="5.33" y="-3.97" width="2.34" height="2.14" fill="#1c1a19"/><rect x="5.5" y="-3.8" width="2" height="1.8" fill="#f6f2ec"/><rect x="5.9" y="-3.4" width=".7" height=".6" fill="#ffffff"/></g>
+    <g class="acc pumpkin"><rect x="-6.77" y="-11.37" width="13.54" height="6.74" fill="#1c1a19"/><rect x="-6.6" y="-11.2" width="13.2" height="6.4" fill="#e8862e"/><rect x="-6.1" y="-11.75" width="12.2" height=".6" fill="#e8862e"/><rect x="-5" y="-12.2" width="10" height=".5" fill="#e8862e"/><rect x="-3.4" y="-11.7" width=".35" height="6.7" fill="#c4691d"/><rect x="-0.2" y="-12.1" width=".35" height="7.1" fill="#c4691d"/><rect x="3.1" y="-11.7" width=".35" height="6.7" fill="#c4691d"/><rect x="-0.4" y="-13.1" width=".9" height="1.1" fill="#5d7a3a"/><g fill="#ffd36b"><rect x="-3.4" y="-8.6" width=".9" height=".6"/><rect x="-3.8" y="-8" width="1.7" height=".6"/><rect x="-4.2" y="-7.4" width="2.5" height=".6"/><rect x="2.6" y="-8.6" width=".9" height=".6"/><rect x="2.2" y="-8" width="1.7" height=".6"/><rect x="1.8" y="-7.4" width="2.5" height=".6"/><rect x="-3" y="-6" width="6" height=".7"/></g><rect x="-1.3" y="-6" width=".6" height=".35" fill="#e8862e"/><rect x="0.9" y="-5.65" width=".6" height=".35" fill="#e8862e"/></g>
     <g class="glasses" fill="none" stroke="#e6ecf2" stroke-width=".2"><rect x="-4.3" y="-8.2" width="2.6" height="2.6"/><rect x="1.7" y="-8.2" width="2.6" height="2.6"/><path d="M-1.7 -7H1.7"/></g>
   </svg>
 </button>
@@ -522,6 +526,8 @@ body.five #crab .down { display: none; }
   const pickOne = (arr) => arr[Math.floor(Math.random() * arr.length)];
   // 万圣节前三天到当天（10/28–10/31）：南瓜头加蝙蝠翅膀，脱不下来
   const HALLOWEEN = (() => { const d = new Date(); return (d.getMonth() === 9 && d.getDate() >= 28) || /[?&]halloween/.test(location.search); })();
+  function easterDay(y) { const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451), mo = Math.floor((h + l - 7 * m + 114) / 31), dd = ((h + l - 7 * m + 114) % 31) + 1; return new Date(y, mo - 1, dd); }
+  const EASTER = (() => { const d = new Date(), t = new Date(d.getFullYear(), d.getMonth(), d.getDate()), diff = Math.round((easterDay(d.getFullYear()) - t) / 86400000); return (diff >= 0 && diff <= 3) || /[?&]easter/.test(location.search); })();
   function picker(arr) { let last = -1; return () => { let i; do { i = Math.floor(Math.random() * arr.length); } while (arr.length > 1 && i === last); last = i; return arr[i]; }; }
 
   // ---------------- 时段 ----------------
@@ -785,6 +791,7 @@ body.five #crab .down { display: none; }
   // 打招呼：提到哪样东西，得那样东西真摆在画里
   function withItems(base) {
     const has = (...k) => items.some(i => k.includes(i.key)), L = base.slice();
+    if (EASTER) L.push('复活节快乐。', '找到彩蛋了吗。', '耳朵是真的，别拽。');
     if (HALLOWEEN) L.push('不给糖就捣蛋。', '南瓜头有点闷，但是好看吧。');
     if (has('ball', 'tennis')) L.push('球还在那儿。'); if (has('game')) L.push('游戏机在那儿。'); if (has('palette')) L.push('调色板还没洗。');
     return pickOne(L);
@@ -871,6 +878,7 @@ body.five #crab .down { display: none; }
       walkTo(innerWidth / 2, CY(), () => say(GREET[shown]()));
       return;
     }
+    if (EASTER && !HALLOWEEN) { crabEl.classList.remove('hop'); void crabEl.offsetWidth; crabEl.classList.add('hop'); }
     pokes++; clearTimeout(pokeReset); pokeReset = setTimeout(() => { pokes = 0; }, 20000);
     if (document.body.classList.contains('five')) { happy(); return; } // 五点举白旗的时候，一句话都不说
     if (fist.hidden && (kefuSeen ? pokes > 4 && Math.random() < 0.1 : pokes === 6)) { kefu(); return; }
@@ -1143,6 +1151,7 @@ body.five #crab .down { display: none; }
   function applyWear() {
     [...crabEl.classList].filter(c => c.startsWith('w-')).forEach(c => crabEl.classList.remove(c));
     if (HALLOWEEN) { crabEl.classList.add('w-pumpkin', 'w-bat'); if (wear.neck !== 'none') crabEl.classList.add('w-' + wear.neck); }
+    else if (EASTER) crabEl.classList.add('w-bunny', 'w-bow');
     else {
       if (wear.head !== 'none') crabEl.classList.add('w-' + wear.head);
       if (wear.neck !== 'none') crabEl.classList.add('w-' + wear.neck);
@@ -1167,6 +1176,7 @@ body.five #crab .down { display: none; }
   function openCloset() {
     sheet.hidden = true; closet.hidden = false;
     buildRows();
+    if (EASTER && !HALLOWEEN && !$('#hwnote')) { const n = document.createElement('p'); n.id = 'hwnote'; n.className = 'label'; n.textContent = '复活节这几天，兔耳朵和领结脱不下来。'; closet.querySelector('header').after(n); }
     if (HALLOWEEN && !$('#hwnote')) { const n = document.createElement('p'); n.id = 'hwnote'; n.className = 'label'; n.textContent = '万圣节这几天，南瓜头和翅膀脱不下来。领结还能换。'; closet.querySelector('header').after(n); }
     if (!atCenter() && !busy && !held) walkTo(innerWidth / 2, CY());
   }
@@ -2200,6 +2210,7 @@ body.five #crab .down { display: none; }
   hintT = setTimeout(() => { $('#hint').style.opacity = 0; }, 9000);
   if (awayLog) setTimeout(() => showAway(awayLog), 1200);
   else if (HALLOWEEN) setTimeout(() => say('不给糖就捣蛋！', 2400), 1500);
+  else if (EASTER) setTimeout(() => say('复活节快乐！', 2400), 1500);
 })();
 </script>
 </body>
