@@ -319,6 +319,24 @@ body.five #crab .down { display: none; }
 #viewframe { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; }
 #viewframe img { max-width: 100%; max-height: 100%; box-sizing: border-box; background: #fffdf9; padding: 8px; border: 10px solid var(--fc, #8a5a3c); box-shadow: 0 10px 26px rgba(42, 37, 34, 0.22); }
 #viewbtns { display: flex; justify-content: center; gap: 10px; }
+/* 节日图鉴：只收节日那几天真碰上的名场面 */
+#dexbtn { position: fixed; left: 12px; bottom: calc(114px + env(safe-area-inset-bottom, 0px)); z-index: 5; background: none; border: 0; padding: 6px; cursor: pointer; filter: drop-shadow(0 3px 0 rgba(42, 37, 34, 0.18)); }
+#dexbtn svg { display: block; }
+#dexbtn:focus-visible { outline: 2px solid var(--shell); outline-offset: 2px; }
+#dex { position: fixed; inset: 0; z-index: 8; display: flex; flex-direction: column; gap: 10px; background: #efe6d6; color: var(--ink); padding: calc(10px + env(safe-area-inset-top, 0px)) 16px calc(14px + env(safe-area-inset-bottom, 0px)); overflow-y: auto; }
+#dex .back, #dex .ghost { color: var(--soft); }
+#dex .sub { max-width: 760px; width: 100%; margin: 0 auto; font-size: 13px; color: var(--soft); text-align: center; }
+#dex h3 { max-width: 760px; width: 100%; margin: 8px auto 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; display: flex; justify-content: space-between; }
+#dex h3 small { font-weight: 400; color: var(--soft); font-size: 12px; }
+.dexgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 12px; max-width: 760px; width: 100%; margin: 0 auto; }
+.dcard { background: #fffdf9; border: 1px solid var(--edge); border-radius: 10px; padding: 8px 6px 7px; text-align: center; }
+.dcard .pic { height: 66px; display: flex; align-items: flex-end; justify-content: center; }
+.dcard { overflow: hidden; }
+.dcard .pic svg { width: 48px; height: auto; overflow: visible; }
+.dcard.locked .pic svg { filter: brightness(0); opacity: 0.18; }
+.dcard b { display: block; font-size: 13px; font-weight: 600; margin-top: 4px; }
+.dcard span { display: block; font-size: 11px; color: var(--soft); line-height: 1.5; min-height: 2.9em; }
+#dextoast { position: fixed; left: 50%; top: calc(56px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); z-index: 9; background: var(--ink); color: var(--paper); border-radius: 999px; padding: 6px 14px; font-size: 13px; letter-spacing: 0.06em; animation: fistin 0.3s ease-out; pointer-events: none; }
 /* 工作陪伴：衣柜上面一台小电脑，点进去它陪你干活 */
 #pcbtn {
   position: fixed; left: 12px; bottom: calc(62px + env(safe-area-inset-bottom, 0px)); z-index: 5;
@@ -446,6 +464,13 @@ body.five #crab .down { display: none; }
 <button id="mailbox" type="button" aria-label="信箱" hidden></button>
 <button id="closetbtn" type="button" aria-label="衣柜"></button>
 <button id="pcbtn" type="button" aria-label="电脑，陪你干活"></button>
+<button id="dexbtn" type="button" aria-label="节日图鉴"></button>
+<section id="dex" aria-label="节日图鉴" hidden>
+  <div class="topbar"><button class="back" type="button" id="dexback">← 回去</button><h2>节日图鉴</h2><span class="ghost" id="dexcount"></span></div>
+  <p class="sub">只有节日那几天真碰上的才算，偷看的不算。</p>
+  <div id="dexbody"></div>
+</section>
+
 <section id="work" aria-label="陪你干活" hidden>
   <div class="topbar"><button class="back" type="button" id="workback">← 回去</button><h2>陪你干活</h2><span class="ghost"></span></div>
   <div id="wtime" role="timer" aria-live="off">00:00:00</div>
@@ -528,6 +553,7 @@ body.five #crab .down { display: none; }
   const HALLOWEEN = (() => { const d = new Date(); return (d.getMonth() === 9 && d.getDate() >= 28) || /[?&]halloween/.test(location.search); })();
   function easterDay(y) { const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451), mo = Math.floor((h + l - 7 * m + 114) / 31), dd = ((h + l - 7 * m + 114) % 31) + 1; return new Date(y, mo - 1, dd); }
   const EASTER = (() => { const d = new Date(), t = new Date(d.getFullYear(), d.getMonth(), d.getDate()), diff = Math.round((easterDay(d.getFullYear()) - t) / 86400000); return (diff >= 0 && diff <= 3) || /[?&]easter/.test(location.search); })();
+  const HALLOWEEN_REAL = HALLOWEEN, EASTER_REAL = EASTER;
   function picker(arr) { let last = -1; return () => { let i; do { i = Math.floor(Math.random() * arr.length); } while (arr.length > 1 && i === last); last = i; return arr[i]; }; }
 
   // ---------------- 时段 ----------------
@@ -878,7 +904,7 @@ body.five #crab .down { display: none; }
       walkTo(innerWidth / 2, CY(), () => say(GREET[shown]()));
       return;
     }
-    if (EASTER && !HALLOWEEN) { crabEl.classList.remove('hop'); void crabEl.offsetWidth; crabEl.classList.add('hop'); }
+    if (EASTER && !HALLOWEEN) { crabEl.classList.remove('hop'); void crabEl.offsetWidth; crabEl.classList.add('hop'); seen('hop'); }
     pokes++; clearTimeout(pokeReset); pokeReset = setTimeout(() => { pokes = 0; }, 20000);
     if (document.body.classList.contains('five')) { happy(); return; } // 五点举白旗的时候，一句话都不说
     if (fist.hidden && (kefuSeen ? pokes > 4 && Math.random() < 0.1 : pokes === 6)) { kefu(); return; }
@@ -896,7 +922,7 @@ body.five #crab .down { display: none; }
     // 吃：一口一口从靠它那边咬掉，渣往下掉；喝：举起来仰头，咕咚几下
     const drink = ['coffee', 'boba', 'soda', 'milk'].includes(o.key);
     o.el.style.pointerEvents = 'none'; crabEl.classList.add('blush');
-    say(pickOne(it.say), 2400);
+    say(pickOne(it.say), 2400); seen('eat');
     const done = (ms) => setTimeout(() => {
       o.el.classList.add('gone'); crabEl.classList.remove('blush', 'chomp', 'sip', 'gulp'); happy(1600);
       puff('✦', 'zz', 1600);
@@ -1068,6 +1094,7 @@ body.five #crab .down { display: none; }
   }
   function applyDabs(cv, p) { dabs.filter(d => d.p === p).forEach(d => drawDab(cv, d)); }
   function startPainting() {
+    seen('paint');
     const x = rnd(0.25, 0.7) * innerWidth, y = CY() + rnd(-10, 30);
     walkTo(x, y, () => {
       painting = true;
@@ -1452,6 +1479,7 @@ body.five #crab .down { display: none; }
     sSay(pickOne(['好，重新来。', '新的一张。', '擦干净了，像没画过。']), 2000);
   });
   function openStudio() {
+    seen('paint');
     if (painting) stopPainting();
     hideInvite(); away = true; sheet.hidden = true; closet.hidden = true; studio.hidden = false;
     $('#scrab').replaceChildren(crabCopy());
@@ -1829,6 +1857,7 @@ body.five #crab .down { display: none; }
     st.busy = false; await tell(`${myName}要怎么做？`); if (st && !st.busy) skillsFor(true);
   }
   async function startBattle() {
+    seen('battle');
     tok++;
     st = { me: { hp: MAXHP(), mp: MAXMP(), max: MAXHP(), mmax: MAXMP() }, foe: { hp: FOEHP(), mp: 30, max: FOEHP(), mmax: 30 }, busy: true, evade: false, charge: false, foam: false, guard: false, result: null };
     $('#foe').className = 'fighter'; $('#me').className = 'fighter';
@@ -1871,6 +1900,7 @@ body.five #crab .down { display: none; }
     document.body.appendChild(z); setTimeout(() => z.remove(), dur);
   }
   function sleep() {
+    seen('nap');
     sleeping = true; crabEl.classList.add('sleep');
     say(pickOne(['困了。', '眯一会儿。', '……']), 1500);
     zzT = setInterval(() => puff(pickOne(['z', 'Z', 'z']), 'zz', 2300), 950);
@@ -1891,6 +1921,7 @@ body.five #crab .down { display: none; }
   // 挂机久了、或者吃饱了：整只凑到屏幕上，歪着脸贴一下，玻璃上留一团雾
   const cu = $('#closeup');
   function pressFace(line, opts = {}) {
+    if (!pressing) seen('press');
     if (pressing || (away && !opts.force)) return;
     cu.style.zIndex = opts.force ? '9' : '';
     pressing = true; busy = true; hideInvite(); stopGroove();
@@ -2007,11 +2038,12 @@ body.five #crab .down { display: none; }
       $('#wscene').appendChild(k); setTimeout(() => k.remove(), 480);
     }, 170);
   }
-  function wtype(on) { wcrab.classList.toggle('typing', on); $('#whands').classList.toggle('typing', on); keyTaps(on); }
+  function wtype(on) { if (on) seen('type'); wcrab.classList.toggle('typing', on); $('#whands').classList.toggle('typing', on); keyTaps(on); }
   const TYPE = ['再不跑通我就砸了。', '跑！给我跑！', '……我没砸，我在敲。', '咚咚咚。', '嗒嗒嗒。', '在写，在写。', '这个变量叫什么好。', '跑通了。……又没跑通。', '我写我的，你忙你的。', '这一段删了重写。', '你那边顺吗。'];
   // 钓鱼执法：干活的时候它主动邀你打一局，你一进去，它开外挂一招秒了你，"玩什么玩。"
   let trapMode = false;
   async function trapBattle() {
+    seen('trap');
     trapMode = true; arena.hidden = false; tok++; const t = tok;
     const foeName = $('#foeplate .nm span').textContent, meName = typeof myName !== 'undefined' ? myName : '唯';
     st = { me: { hp: MAXHP(), mp: MAXMP(), max: MAXHP(), mmax: MAXMP() }, foe: { hp: FOEHP(), mp: 30, max: FOEHP(), mmax: 30 }, busy: true, evade: false, result: null };
@@ -2057,7 +2089,7 @@ body.five #crab .down { display: none; }
       b.hidden = true; b.onclick = null;
       if (took) await trapBattle(); else { wline(pickOne(['不来？算你定力好。', '……那接着干活。'])); await wwait(1600); }
     } else {
-      wcrab.classList.add('doze'); wline('……'); await wwait(2200); wcrab.classList.remove('doze'); wline(pickOne(['没睡！', '我醒着。', '刚才那下不算。'])); await wwait(1200);
+      seen('nap'); wcrab.classList.add('doze'); wline('……'); await wwait(2200); wcrab.classList.remove('doze'); wline(pickOne(['没睡！', '我醒着。', '刚才那下不算。'])); await wwait(1200);
     }
     W.moyu++; wsave(); wbusy = false; nextEvt = Date.now() + rnd(15, 35) * 1000;
     if (W.run) wtype(true);
@@ -2149,6 +2181,59 @@ body.five #crab .down { display: none; }
     if (W.run) say(pickOne(['你忙，我接着敲。', '计时还在走。']), 2400);
   });
 
+  // ---------------- 节日图鉴：节日那几天真碰上的名场面，一张一张点亮 ----------------
+  const DEX = {
+    halloween: { name: '万圣节', when: '10/28–10/31', wear: ['pumpkin', 'bat'], cards: [
+      ['type', '南瓜上班', '南瓜灯也要敲键盘。'], ['press', '南瓜贴脸', '整颗南瓜压过来。'], ['trap', '南瓜执法', '南瓜开了外挂。'],
+      ['eat', '南瓜吃东西', '嘴是刻出来的，也能吃。'], ['nap', '南瓜打盹', '灯没灭，人睡了。'], ['paint', '南瓜画画', '画里多了一颗南瓜。'], ['battle', '南瓜对战', '不给糖就开打。'] ] },
+    easter: { name: '复活节', when: '复活节前三天到当天', wear: ['bunny', 'bow'], cards: [
+      ['hop', '蹦一下', '戳一下，蹦一下。'], ['type', '兔子上班', '耳朵从屏幕后面竖起来。'], ['press', '兔子贴脸', '耳朵先到，脸后到。'], ['trap', '兔子执法', '兔子也开外挂。'],
+      ['eat', '兔子吃东西', '胡萝卜没有，蛋糕凑合。'], ['nap', '兔子打盹', '耳朵耷拉下来了。'], ['paint', '兔子画画', '画了一颗彩蛋。'], ['battle', '兔子对战', '蹦着打。'] ] },
+  };
+  let dex = {}; try { dex = JSON.parse(localStorage.getItem('crab-dex') || '{}'); } catch (e) {}
+  function seen(moment) {
+    const hol = (HALLOWEEN_REAL && HALLOWEEN) ? 'halloween' : (EASTER_REAL && EASTER && !HALLOWEEN) ? 'easter' : null;
+    if (!hol) return;
+    const card = DEX[hol].cards.find(c => c[0] === moment); if (!card) return;
+    const key = hol + ':' + moment; if (dex[key]) return;
+    dex[key] = Date.now(); try { localStorage.setItem('crab-dex', JSON.stringify(dex)); } catch (e) {}
+    const t = document.createElement('div'); t.id = 'dextoast'; t.textContent = `图鉴 +1：${card[1]}`;
+    document.getElementById('dextoast')?.remove(); document.body.appendChild(t); setTimeout(() => t.remove(), 2600);
+  }
+  function costumeCopy(keep, m) {
+    const svg = crabEl.querySelector('svg').cloneNode(true);
+    svg.querySelectorAll('.acc').forEach(g => { const k = [...g.classList].find(c => c !== 'acc'); if (!keep.includes(k)) g.remove(); });
+    svg.querySelectorAll('.letter, .flag, .bump, .grin, .up').forEach(n => n.remove());
+    if (m === 'nap') svg.querySelectorAll('.eye').forEach(n => n.remove()); else svg.querySelectorAll('.shut').forEach(n => n.remove());
+    if (m !== 'press' && m !== 'eat') svg.querySelectorAll('.blush').forEach(n => n.remove());
+    if (keep.includes('pumpkin')) svg.querySelectorAll('.glasses').forEach(n => n.remove());
+    svg.querySelectorAll('.eye').forEach(n => n.removeAttribute('transform'));
+    return svg;
+  }
+  const BOOK = { s: 3, grid: ['.bbbbbbbbb.', 'bppppppppbb', 'bpllllllpbb', 'bppppppppbb', 'bpllllpppbb', 'bppppppppbb', 'bpllllllpbb', 'bppppppppbb', '.bbbbbbbbb.'], col: { b: '#8a5a3c', p: '#f6f1e6', l: '#c9b896' } };
+  $('#dexbtn').innerHTML = pixSVG(BOOK);
+  function openDex() {
+    if (painting) stopPainting();
+    hideInvite(); away = true; sheet.hidden = true; closet.hidden = true;
+    const body = $('#dexbody'); body.replaceChildren(); let got = 0, all = 0;
+    Object.entries(DEX).forEach(([hk, H]) => {
+      const n = H.cards.filter(c => dex[hk + ':' + c[0]]).length; got += n; all += H.cards.length;
+      const h = document.createElement('h3'); h.innerHTML = '<span></span><small></small>'; h.firstChild.textContent = H.name; h.lastChild.textContent = `${H.when} · ${n}/${H.cards.length}`;
+      const grid = document.createElement('div'); grid.className = 'dexgrid';
+      H.cards.forEach(([m, title, line]) => {
+        const on = !!dex[hk + ':' + m], c = document.createElement('div'); c.className = 'dcard' + (on ? '' : ' locked');
+        const pic = document.createElement('div'); pic.className = 'pic'; pic.appendChild(costumeCopy(H.wear, m));
+        const b = document.createElement('b'), sp = document.createElement('span');
+        b.textContent = on ? title : '？？？'; sp.textContent = on ? line : '还没碰上。';
+        c.append(pic, b, sp); grid.appendChild(c);
+      });
+      body.append(h, grid);
+    });
+    $('#dexcount').textContent = `${got}/${all}`;
+    $('#dex').hidden = false;
+  }
+  $('#dexbtn').addEventListener('click', openDex);
+  $('#dexback').addEventListener('click', () => { leave($('#dex')); });
   // ---------------- 你不在的时候：回来那一刻，照它平时的规矩一个钟头一个钟头补着过一遍 ----------------
   let skipKeys = new Set();
   const markSeen = () => { try { localStorage.setItem('crab-last', String(Date.now())); } catch (e) {} };
