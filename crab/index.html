@@ -1202,7 +1202,7 @@ body.five #crab .down { display: none; }
 
   // ---------------- 画室：莫奈的笔触，一笔是一簇短短的色块 ----------------
   const studio = $('#studio'), paper = $('#art'), paperc = paper.getContext('2d');
-  let layers = [], active = 0, art = null, artc = null, restored = false, layerSeq = 2;
+  let layers = [], active = 0, art = null, artc = null, restored = false, layerSeq = 2, artReady = false;
   const PAINTS = [['睡莲粉', 340, 62, 78], ['晨雾紫', 268, 34, 70], ['洋红', 322, 68, 50], ['靛蓝', 240, 52, 36], ['深夜蓝', 226, 58, 24], ['塞纳蓝', 210, 55, 52], ['水面青', 180, 42, 50], ['柳绿', 96, 38, 50], ['干草黄', 44, 78, 66], ['落日橙', 22, 85, 60], ['罂粟红', 4, 72, 52], ['奶油白', 40, 60, 93]];
   let ink = { h: 340, s: 62, l: 78 }, inkName = '睡莲粉', brush = 16, strokes = 0, sbT = null, saveT = null, clearArm = false;
   function hslRgb(h, s, l) { s /= 100; l /= 100; const k = (n) => (n + h / 30) % 12, a = s * Math.min(l, 1 - l), f = (n) => l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1)); return [f(0), f(8), f(4)].map(v => Math.round(v * 255)); }
@@ -1288,11 +1288,13 @@ body.five #crab .down { display: none; }
   async function sizeArt(keep) {
     sizePaper();
     if (keep && layers.length) { layers.forEach(L => sizeLayer(L, true)); return; }
-    resetLayers(1); restored = false;
+    resetLayers(1); restored = false; artReady = false;
     let w = null; try { w = await GDB.getWip(); } catch (e) {}
-    if (await loadLayers(w)) { restored = true; return; }
+    if (await loadLayers(w)) { restored = true; artReady = true; return; }
     let src = null; try { src = localStorage.getItem('crab-art'); } catch (e) {}
-    if (src) { const im = new Image(); im.onload = () => { putImg(layers[0], im); restored = true; saveArt(); }; im.src = src; }
+    if (!src) { artReady = true; return; }
+    await new Promise(res => { const im = new Image(); im.onload = () => { putImg(layers[0], im); restored = true; res(); }; im.onerror = () => res(); im.src = src; });
+    artReady = true;
   }
   async function loadLayers(w) {
     if (!w || !w.layers || !w.layers.length) return false;
@@ -1311,11 +1313,16 @@ body.five #crab .down { display: none; }
   }
   function saveArt() {
     clearTimeout(saveT);
+    if (!artReady) return;
     saveT = setTimeout(async () => {
+      try {
+        const c = document.createElement('canvas'); c.width = paper.width; c.height = paper.height; const g = c.getContext('2d');
+        g.drawImage(paper, 0, 0); layers.forEach(L => { if (L.vis) g.drawImage(L.cv, 0, 0); });
+        localStorage.setItem('crab-art', c.toDataURL('image/jpeg', 0.8));
+      } catch (e) {}
       try {
         const blobs = await Promise.all(layers.map(L => new Promise(res => L.cv.toBlob(res, 'image/png'))));
         await GDB.putWip({ k: 'wip', active, layers: layers.map((L, i) => ({ name: L.name, vis: L.vis, blob: blobs[i] })) });
-        localStorage.removeItem('crab-art');
       } catch (e) {}
     }, 700);
   }
@@ -1378,6 +1385,7 @@ body.five #crab .down { display: none; }
   let last = null, carry = 0;
   paper.addEventListener('pointerdown', (e) => {
     if (!layers.length) return;
+    if (!artReady) { sSay('画布还在铺，等我一下。', 1600); return; }
     if (!layers[active].vis) { sSay('这一层藏起来了，先把它的圆点点亮。', 2200); return; }
     try { paper.setPointerCapture(e.pointerId); } catch (x) {}
     const r = paper.getBoundingClientRect(); last = { x: e.clientX - r.left, y: e.clientY - r.top }; carry = 0;
@@ -1422,15 +1430,28 @@ body.five #crab .down { display: none; }
   // ---------------- 画廊：画好的挂到墙上，存进这个浏览器的 IndexedDB ----------------
   let dirty = false, hung = false;
   const GDB = (() => {
+    // 不再升数据库版本：升版本的时候只要别处还开着旧页面，就会一直卡住，读不出也存不进。
+    // 没画完的那张放在同一个柜子里，编号 0；画廊列表把它排除掉。以前存进 wip 柜子的也照样读得出来。
     let p = null;
     const open = () => p || (p = new Promise((res, rej) => {
-      const r = indexedDB.open('crab-gallery', 2);
-      r.onupgradeneeded = () => { const db = r.result; if (!db.objectStoreNames.contains('art')) db.createObjectStore('art', { keyPath: 'id', autoIncrement: true }); if (!db.objectStoreNames.contains('wip')) db.createObjectStore('wip', { keyPath: 'k' }); };
-      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+      const r = indexedDB.open('crab-gallery');
+      r.onupgradeneeded = () => { const db = r.result; if (!db.objectStoreNames.contains('art')) db.createObjectStore('art', { keyPath: 'id', autoIncrement: true }); };
+      let ok = false;
+      r.onsuccess = () => { ok = true; const db = r.result; db.onversionchange = () => { db.close(); p = null; }; res(db); };
+      r.onerror = () => { p = null; rej(r.error); };
+      setTimeout(() => { if (!ok) { p = null; rej(new Error('timeout')); } }, 4000);
     }));
     const run = async (store, mode, fn) => { const db = await open(); return new Promise((res, rej) => { const t = db.transaction(store, mode), q = fn(t.objectStore(store)); t.oncomplete = () => res(q.result); t.onerror = () => rej(t.error); }); };
-    return { add: (o) => run('art', 'readwrite', s => s.add(o)), all: () => run('art', 'readonly', s => s.getAll()), del: (id) => run('art', 'readwrite', s => s.delete(id)),
-      putWip: (o) => run('wip', 'readwrite', s => s.put(o)), getWip: () => run('wip', 'readonly', s => s.get('wip')) };
+    return {
+      add: (o) => run('art', 'readwrite', s => s.add(o)),
+      all: async () => (await run('art', 'readonly', s => s.getAll())).filter(it => it.id !== 0),
+      del: (id) => run('art', 'readwrite', s => s.delete(id)),
+      putWip: (o) => run('art', 'readwrite', s => s.put({ ...o, id: 0 })),
+      getWip: async () => {
+        const w = await run('art', 'readonly', s => s.get(0)); if (w) return w;
+        const db = await open(); return db.objectStoreNames.contains('wip') ? run('wip', 'readonly', s => s.get('wip')) : null;
+      },
+    };
   })();
   const FRAMES = ['#8a5a3c', '#c9a45c', '#2f3b5c', '#6b4630', '#7a8a6a'];
   const fdate = (t) => { const d = new Date(t); return `${d.getMonth() + 1}月${d.getDate()}日`; };
