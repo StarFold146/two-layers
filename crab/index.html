@@ -455,7 +455,7 @@ body.five #crab .down { display: none; }
       <div id="pad2" tabindex="0" role="application" aria-label="调色板。左右换色相，上下换明暗，方向键也可以。"><i id="dot2"></i></div>
       <div class="satrow2"><label for="sat2">浓淡</label><input id="sat2" type="range" min="0" max="100" value="60"></div>
     </div>
-    <div class="toolrow"><button class="pill" type="button" id="hangbtn">挂进画廊</button><button class="pill" type="button" id="galbtn">画廊</button></div>
+    <div class="toolrow"><span role="group" aria-label="笔" class="toolrow" id="kinds"><button class="pill" type="button" data-k="oil" aria-pressed="true">油画</button><button class="pill" type="button" data-k="pencil" aria-pressed="false">铅笔</button></span><span style="flex:1"></span><button class="pill" type="button" id="hangbtn">挂进画廊</button><button class="pill" type="button" id="galbtn">画廊</button></div>
   </div>
 </section>
 <section id="gallery" aria-label="画廊" hidden>
@@ -1274,16 +1274,44 @@ body.five #crab .down { display: none; }
     }
     artc.restore();
   }
+  // 铅笔：沿着笔迹撒很多细小的点，纸面有凹凸（一张固定的颗粒图），凹下去的地方铅笔够不着，所以线是毛的、反复涂会越来越实
+  let brushKind = 'oil';
+  const TOOTH = (() => {
+    const n = 96, a = new Float32Array(n * n).map(() => Math.random()), b = new Float32Array(n * n);
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      let s = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) s += a[((y + dy + n) % n) * n + (x + dx + n) % n];
+      b[y * n + x] = s / 9;
+    }
+    let lo = 1, hi = 0; b.forEach(v => { lo = Math.min(lo, v); hi = Math.max(hi, v); });
+    return b.map(v => (v - lo) / (hi - lo));
+  })();
+  const tooth = (x, y) => TOOTH[(((y | 0) % 96 + 96) % 96) * 96 + (((x | 0) % 96 + 96) % 96)];
+  const PEN_W = { 8: 1.4, 16: 2.6, 30: 5 };
+  function pencilSeg(ax, ay, bx, by, press) {
+    const w = (PEN_W[brush] || 2.6) * press, d = Math.hypot(bx - ax, by - ay), steps = Math.max(1, Math.ceil(d / 0.7));
+    artc.fillStyle = css(hslRgb(ink.h, Math.min(100, ink.s + 6), Math.max(6, ink.l - 6)));
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps, x = ax + (bx - ax) * t, y = ay + (by - ay) * t;
+      for (let k = 0; k < w * 2.4; k++) {
+        const ox = rnd(-w / 2, w / 2), oy = rnd(-w / 2, w / 2), px = x + ox, py = y + oy;
+        if (tooth(px, py) > 0.3 + Math.hypot(ox, oy) / w * 0.5) { artc.globalAlpha = rnd(0.3, 0.62) * Math.min(1, press); artc.fillRect(px, py, 0.9, 0.9); }
+      }
+    }
+    artc.globalAlpha = 1;
+  }
+  const press = (e) => (e.pressure && e.pointerType === 'pen' ? 0.5 + e.pressure : 1);
   let last = null, carry = 0;
   art.addEventListener('pointerdown', (e) => {
     try { art.setPointerCapture(e.pointerId); } catch (x) {}
     const r = art.getBoundingClientRect(); last = { x: e.clientX - r.left, y: e.clientY - r.top }; carry = 0;
-    dabAt(last.x, last.y, rnd(-0.6, 0.6), brush * (e.pressure && e.pointerType === 'pen' ? 0.5 + e.pressure : 1));
+    if (brushKind === 'pencil') pencilSeg(last.x, last.y, last.x + 0.5, last.y + 0.5, press(e));
+    else dabAt(last.x, last.y, rnd(-0.6, 0.6), brush * press(e));
   });
   art.addEventListener('pointermove', (e) => {
     if (!last) return;
     const r = art.getBoundingClientRect(), p = { x: e.clientX - r.left, y: e.clientY - r.top };
     const dx = p.x - last.x, dy = p.y - last.y, d = Math.hypot(dx, dy); if (d < 1) return;
+    if (brushKind === 'pencil') { pencilSeg(last.x, last.y, p.x, p.y, press(e)); last = p; return; }
     const ang = Math.atan2(dy, dx), step = Math.max(2, brush * 0.5), sz = brush * (e.pressure && e.pointerType === 'pen' ? 0.5 + e.pressure : 1);
     carry += d;
     while (carry >= step) { carry -= step; const t = 1 - carry / d; dabAt(last.x + dx * t + rnd(-1, 1) * brush * 0.15, last.y + dy * t + rnd(-1, 1) * brush * 0.15, ang, sz); }
@@ -1335,6 +1363,10 @@ body.five #crab .down { display: none; }
       g.drawImage(art, 0, 0, c.width, c.height); c.toBlob(res, 'image/jpeg', 0.88);
     });
   }
+  $('#kinds').querySelectorAll('.pill').forEach(b => b.addEventListener('click', () => {
+    brushKind = b.dataset.k; $('#kinds').querySelectorAll('.pill').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    sSay(brushKind === 'pencil' ? pickOne(['铅笔，适合打草稿。', '削好了。', '轻一点画，纸会起毛。']) : pickOne(['换回油画。', '颜料还没干，接着来。']), 1800);
+  }));
   $('#hangbtn').addEventListener('click', async () => {
     let saved = false; try { saved = !!localStorage.getItem('crab-art'); } catch (e) {}
     if (!dirty && !hung && saved) dirty = true;   // 上次没画完、留在画布上的那张也能挂
