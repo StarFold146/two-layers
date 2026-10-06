@@ -158,6 +158,13 @@ body.five #crab .down { display: none; }
 }
 #closet .row button[aria-pressed="true"] { background: var(--shell); border-color: var(--shell); color: var(--paper); }
 #closetbtn:focus-visible, #closet button:focus-visible { outline: 2px solid var(--shell); outline-offset: 2px; }
+#crab.w-pumpkin .pumpkin, #crab.w-bat .bat { display: block; }
+#crab.w-bat .wl { animation: flap 1.3s ease-in-out infinite; } #crab.w-bat .wr { animation: flap 1.3s ease-in-out -0.65s infinite; }
+@keyframes flap { 50% { transform: translateY(-0.7px); } }
+#awaynote { position: fixed; top: calc(56px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); z-index: 6; width: min(19em, 86vw); background: var(--paper); color: var(--ink); border: 1px solid var(--edge); border-radius: 14px; padding: 12px 14px 10px; font-size: 14px; line-height: 1.7; box-shadow: 0 10px 30px rgba(42, 37, 34, 0.16); animation: fistin 0.35s ease-out; }
+#awaynote b { display: block; font-size: 15px; font-weight: 600; letter-spacing: 0.06em; margin-bottom: 4px; }
+#awaynote ul { list-style: none; margin: 0 0 6px; padding: 0; }
+#awaynote button { display: block; margin-left: auto; font: inherit; font-size: 13px; color: var(--soft); background: none; border: 1px solid var(--edge); border-radius: 999px; padding: 2px 12px; cursor: pointer; }
 #crab .letter { display: none; }
 #crab.mail .letter, #crab.mail .up { display: block; }
 #crab.mail .down { display: none; }
@@ -403,6 +410,7 @@ body.five #crab .down { display: none; }
 <button id="clock" type="button" aria-label="现在的时段，点一下预览别的时段"></button>
 <button id="crab" type="button" aria-label="螃蟹">
   <svg viewBox="-7.5 -10.5 15 11" shape-rendering="crispEdges" aria-hidden="true">
+    <g class="acc bat"><g class="wl" fill="#5a4878"><rect x="-10.5" y="-9" width="3.6" height="1.2"/><rect x="-11.5" y="-8" width="4.6" height="1.4"/><rect x="-11.5" y="-6.6" width="1.2" height="1.4"/><rect x="-9.6" y="-6.6" width="1.2" height="1"/><rect x="-7.9" y="-6.6" width="1" height="1.6"/></g><g class="wr" fill="#5a4878"><rect x="6.9" y="-9" width="3.6" height="1.2"/><rect x="6.9" y="-8" width="4.6" height="1.4"/><rect x="10.3" y="-6.6" width="1.2" height="1.4"/><rect x="8.4" y="-6.6" width="1.2" height="1"/><rect x="6.9" y="-6.6" width="1" height="1.6"/></g></g>
     <g fill="#1c1a19"><rect x="-6.17" y="-9.17" width="12.34" height="7.34"/><rect x="-7.17" y="-7.17" width="1.34" height="2.34"/><rect class="down" x="5.83" y="-7.17" width="1.34" height="2.34"/><rect class="up" x="5.83" y="-10.17" width="1.34" height="3.34"/><rect class="l1" x="-5.17" y="-2.17" width="1.34" height="2.34"/><rect class="l2" x="-2.17" y="-2.17" width="1.34" height="2.34"/><rect class="l1" x="0.83" y="-2.17" width="1.34" height="2.34"/><rect class="l2" x="3.83" y="-2.17" width="1.34" height="2.34"/></g>
     <g fill="#d97757"><rect x="-6" y="-9" width="12" height="7"/><rect x="-7" y="-7" width="1" height="2"/><rect class="down" x="6" y="-7" width="1" height="2"/><rect class="up" x="6" y="-10" width="1" height="3"/><rect class="l1" x="-5" y="-2" width="1" height="2"/><rect class="l2" x="-2" y="-2" width="1" height="2"/><rect class="l1" x="1" y="-2" width="1" height="2"/><rect class="l2" x="4" y="-2" width="1" height="2"/></g>
     <g class="eye" fill="#1c1a19"><rect x="-3.5" y="-7.5" width="1" height="2"/><rect x="2.5" y="-7.5" width="1" height="2"/></g>
@@ -422,6 +430,7 @@ body.five #crab .down { display: none; }
     <g class="letter"><rect x="5.1" y="-12.6" width="3.2" height="2.2" fill="#fbf7f0" stroke="#1c1a19" stroke-width=".15"/><path d="M5.1 -12.6L6.7 -11.4L8.3 -12.6" fill="none" stroke="#1c1a19" stroke-width=".15"/></g>
     <g class="flag"><rect x="6.35" y="-14.6" width=".3" height="4.8" fill="#1c1a19"/><rect x="6.65" y="-14.6" width="2.6" height="1.8" fill="#fbf7f0" stroke="#1c1a19" stroke-width=".15"/></g>
     <g class="bump" fill="#f2a6bd"><rect x="-1" y="-10.4" width="2" height="1.5"/><rect x="-0.6" y="-10.9" width="1.2" height=".6"/></g>
+<g class="acc pumpkin"><rect x="-6.77" y="-11.37" width="13.54" height="6.74" fill="#1c1a19"/><rect x="-6.6" y="-11.2" width="13.2" height="6.4" fill="#e8862e"/><rect x="-6.1" y="-11.75" width="12.2" height=".6" fill="#e8862e"/><rect x="-5" y="-12.2" width="10" height=".5" fill="#e8862e"/><rect x="-3.4" y="-11.7" width=".35" height="6.7" fill="#c4691d"/><rect x="-0.2" y="-12.1" width=".35" height="7.1" fill="#c4691d"/><rect x="3.1" y="-11.7" width=".35" height="6.7" fill="#c4691d"/><rect x="-0.4" y="-13.1" width=".9" height="1.1" fill="#5d7a3a"/><g fill="#ffd36b"><rect x="-3.4" y="-8.6" width=".9" height=".6"/><rect x="-3.8" y="-8" width="1.7" height=".6"/><rect x="-4.2" y="-7.4" width="2.5" height=".6"/><rect x="2.6" y="-8.6" width=".9" height=".6"/><rect x="2.2" y="-8" width="1.7" height=".6"/><rect x="1.8" y="-7.4" width="2.5" height=".6"/><rect x="-3" y="-6" width="6" height=".7"/></g><rect x="-1.3" y="-6" width=".6" height=".35" fill="#e8862e"/><rect x="0.9" y="-5.65" width=".6" height=".35" fill="#e8862e"/></g>
     <g class="glasses" fill="none" stroke="#e6ecf2" stroke-width=".2"><rect x="-4.3" y="-8.2" width="2.6" height="2.6"/><rect x="1.7" y="-8.2" width="2.6" height="2.6"/><path d="M-1.7 -7H1.7"/></g>
   </svg>
 </button>
@@ -510,6 +519,8 @@ body.five #crab .down { display: none; }
   const BANK = 0.66;                    // 岸的上沿，占画面高度的比例；岸以上、地平线以下是水
   const CY = () => innerHeight * 0.74;  // 螃蟹平时站在岸上
   const pickOne = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  // 万圣节前三天到当天（10/28–10/31）：南瓜头加蝙蝠翅膀，脱不下来
+  const HALLOWEEN = (() => { const d = new Date(); return (d.getMonth() === 9 && d.getDate() >= 28) || /[?&]halloween/.test(location.search); })();
   function picker(arr) { let last = -1; return () => { let i; do { i = Math.floor(Math.random() * arr.length); } while (arr.length > 1 && i === last); last = i; return arr[i]; }; }
 
   // ---------------- 时段 ----------------
@@ -680,7 +691,7 @@ body.five #crab .down { display: none; }
   };
   // 每个时段一个池子，每次随机摆三样；吃掉一样，过一会儿从池子里随机补一样
   const STOCK = { morning: ['coffee', 'toast', 'croissant', 'milk', 'ball', 'tennis', 'palette'], noon: ['bento', 'cake', 'boba', 'soda', 'ball', 'tennis', 'game'], evening: ['palette', 'boba', 'soda', 'cake', 'ball', 'tennis', 'game'], night: ['game', 'noodle', 'milk', 'soda', 'ball', 'palette'] };
-  function draw(p, n) { const a = STOCK[p].slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a.slice(0, n); }
+  function draw(p, n, skip) { const a = STOCK[p].filter(k => !(skip && skip.has(k))); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a.slice(0, n); }
   function pixSVG(it) {
     const rows = it.grid, cols = Math.max(...rows.map(r => r.length)), s = it.s;
     let rects = '';
@@ -693,7 +704,8 @@ body.five #crab .down { display: none; }
     items.forEach(o => o.el.remove()); items = []; held = null; busy = false;
     const W = innerWidth, H = innerHeight;
     const spots = [[0.18, 0.78], [0.82, 0.74], [0.5, 0.88], [0.2, 0.3], [0.8, 0.28]];
-    draw(shown, 3).forEach((key, i) => {
+    const skipNow = skipKeys; skipKeys = new Set();
+    draw(shown, 3, skipNow).forEach((key, i) => {
       const [fx, fy] = spots[i];
       addItem(key, fx * W + rnd(-20, 20), fy * H + rnd(-16, 16));
     });
@@ -772,6 +784,7 @@ body.five #crab .down { display: none; }
   // 打招呼：提到哪样东西，得那样东西真摆在画里
   function withItems(base) {
     const has = (...k) => items.some(i => k.includes(i.key)), L = base.slice();
+    if (HALLOWEEN) L.push('不给糖就捣蛋。', '南瓜头有点闷，但是好看吧。');
     if (has('ball', 'tennis')) L.push('球还在那儿。'); if (has('game')) L.push('游戏机在那儿。'); if (has('palette')) L.push('调色板还没洗。');
     return pickOne(L);
   }
@@ -1128,9 +1141,12 @@ body.five #crab .down { display: none; }
   $('#closetbtn').innerHTML = pixSVG(CLOSET);
   function applyWear() {
     [...crabEl.classList].filter(c => c.startsWith('w-')).forEach(c => crabEl.classList.remove(c));
-    if (wear.head !== 'none') crabEl.classList.add('w-' + wear.head);
-    if (wear.neck !== 'none') crabEl.classList.add('w-' + wear.neck);
-    if (wear.job !== 'none') crabEl.classList.add('w-' + wear.job);
+    if (HALLOWEEN) { crabEl.classList.add('w-pumpkin', 'w-bat'); if (wear.neck !== 'none') crabEl.classList.add('w-' + wear.neck); }
+    else {
+      if (wear.head !== 'none') crabEl.classList.add('w-' + wear.head);
+      if (wear.neck !== 'none') crabEl.classList.add('w-' + wear.neck);
+      if (wear.job !== 'none') crabEl.classList.add('w-' + wear.job);
+    }
     try { localStorage.setItem('crab-wear', JSON.stringify(wear)); } catch (e) {}
   }
   function buildRow(el, list, slot) {
@@ -1150,6 +1166,7 @@ body.five #crab .down { display: none; }
   function openCloset() {
     sheet.hidden = true; closet.hidden = false;
     buildRows();
+    if (HALLOWEEN && !$('#hwnote')) { const n = document.createElement('p'); n.id = 'hwnote'; n.className = 'label'; n.textContent = '万圣节这几天，南瓜头和翅膀脱不下来。领结还能换。'; closet.querySelector('header').after(n); }
     if (!atCenter() && !busy && !held) walkTo(innerWidth / 2, CY());
   }
   function buildRows() {
@@ -2121,12 +2138,67 @@ body.five #crab .down { display: none; }
     if (W.run) say(pickOne(['你忙，我接着敲。', '计时还在走。']), 2400);
   });
 
+  // ---------------- 你不在的时候：回来那一刻，照它平时的规矩一个钟头一个钟头补着过一遍 ----------------
+  let skipKeys = new Set();
+  const markSeen = () => { try { localStorage.setItem('crab-last', String(Date.now())); } catch (e) {} };
+  function simulateAway() {
+    const now = Date.now(); let last = 0; try { last = +localStorage.getItem('crab-last') || 0; } catch (e) {}
+    if (!last || now - last < 20 * 60000) return null;
+    const nowP = byHour(new Date(now).getHours()), log = {}, nights = new Set();
+    for (let t = Math.max(last, now - 72 * 3600000) + 30 * 60000; t < now; t += 3600000) {
+      const d = new Date(t), h = d.getHours(), p = byHour(h), day = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+      if (h >= 23 || h < 6) { const n = new Date(t - 7 * 3600000); nights.add(`${n.getMonth()}-${n.getDate()}`); continue; }   // 23 点到 6 点算同一夜
+      const g = log[p] || (log[p] = { eat: new Set(), paint: 0, groove: 0 }), r = Math.random();
+      if (r < 0.35) {
+        const pool = STOCK[p].filter(k => ITEMS[k] && !ITEMS[k].ball && !ITEMS[k].hold), k = pickOne(pool);
+        g.eat.add(k); if (day === today() && p === nowP) skipKeys.add(k);
+      } else if (r < 0.6) {
+        g.paint++;
+        if (day === today()) { const cols = [...PAL[p].sky, ...PAL[p].water, '#d97757']; for (let i = 0; i < 6; i++) dabs.push({ p, x: rnd(0.15, 0.85), y: rnd(0.45, 0.68), l: rnd(10, 22), t: rnd(4, 8), a: rnd(-0.5, 0.5), c: pickOne(cols) }); }
+      } else if (r < 0.75) g.groove++;
+    }
+    saveDabs(dabs);
+    const lines = [];
+    ['morning', 'noon', 'evening', 'night'].forEach(p => {
+      const g = log[p]; if (!g) return; const bits = [];
+      if (g.eat.size) bits.push('吃了' + [...g.eat].slice(0, 3).map(k => ITEMS[k].name).join('、'));
+      if (g.paint) bits.push('在水边画了几笔');
+      if (g.groove) bits.push('跟着晃了一会儿');
+      if (bits.length) lines.push(`${NAMES[p]}${bits.join('，')}。`);
+    });
+    if (nights.size) lines.push(nights.size > 1 ? `夜里睡了 ${nights.size} 觉。` : '夜里睡了一觉。');
+    if (!lines.length) lines.push('一直蹲在门口。');
+    lines.push(pickOne(['然后就在等你。', '剩下的时间都在看门口。', '……没别的了，就等你回来。']));
+    const hrs = Math.round((now - last) / 3600000);
+    return { head: hrs >= 48 ? `你走了 ${Math.round(hrs / 24)} 天。` : hrs >= 1 ? `你走了 ${hrs} 个钟头。` : '你走了一会儿。', lines };
+  }
+  function showAway(n) {
+    let el = $('#awaynote');
+    if (!el) { el = document.createElement('div'); el.id = 'awaynote'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
+    el.innerHTML = '<b></b><ul></ul><button type="button">知道了</button>';
+    el.querySelector('b').textContent = n.head;
+    n.lines.forEach(t => { const li = document.createElement('li'); li.textContent = t; el.querySelector('ul').appendChild(li); });
+    el.querySelector('button').addEventListener('click', () => el.remove());
+    happy(); say(pickOne(['你回来了！', '回来啦。', '等你好久了。']), 2400);
+  }
+  setInterval(markSeen, 30000);
+  addEventListener('pagehide', markSeen);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { markSeen(); return; }
+    const n = simulateAway(); markSeen(); if (!n) return;
+    items.filter(o => skipKeys.has(o.key)).forEach(o => o.el.remove()); items = items.filter(o => !skipKeys.has(o.key)); skipKeys = new Set();
+    applyDabs(front, shown); showAway(n);
+  });
+
   // ---------------- 开始 ----------------
+  const awayLog = simulateAway(); markSeen();
   showPeriod(true);
   const [sx, sy] = pickOne(corners());
   crab.x = crab.tx = sx; crab.y = crab.ty = sy; setCrab();
   requestAnimationFrame(frame);
   hintT = setTimeout(() => { $('#hint').style.opacity = 0; }, 9000);
+  if (awayLog) setTimeout(() => showAway(awayLog), 1200);
+  else if (HALLOWEEN) setTimeout(() => say('不给糖就捣蛋！', 2400), 1500);
 })();
 </script>
 </body>
