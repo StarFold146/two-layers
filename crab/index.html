@@ -145,6 +145,10 @@ body.five #crab .down { display: none; }
 }
 #closet header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; max-width: 36em; width: 100%; margin: 0 auto; }
 #closet h2 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: 0.1em; }
+#closet .ttl { display: flex; align-items: baseline; gap: 12px; }
+#closet .daily { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: var(--soft); letter-spacing: 0.06em; cursor: pointer; }
+#closet .daily input { accent-color: var(--shell); width: 15px; height: 15px; margin: 0; cursor: pointer; }
+
 #closet .close { font: inherit; font-size: 14px; color: var(--soft); background: none; border: 0; cursor: pointer; padding: 4px; }
 #closet .row { display: flex; flex-wrap: wrap; gap: 8px; max-width: 36em; width: 100%; margin: 0 auto; }
 #closet .label { max-width: 36em; width: 100%; margin: 0 auto; font-size: 13px; color: var(--soft); letter-spacing: 0.1em; }
@@ -408,7 +412,7 @@ body.five #crab .down { display: none; }
 </section>
 
 <section id="closet" aria-label="衣柜" hidden>
-  <header><h2>衣柜</h2><button class="close" type="button" id="closetclose">关上</button></header>
+  <header><div class="ttl"><label class="daily"><input type="checkbox" id="dailywear"><span>每日随机</span></label><h2>衣柜</h2></div><button class="close" type="button" id="closetclose">关上</button></header>
   <p class="label">头上</p>
   <div class="row" id="rowhead"></div>
   <p class="label">脖子上</p>
@@ -1107,6 +1111,23 @@ body.five #crab .down { display: none; }
     $('#joblabel').hidden = $('#rowjob').hidden = !jobOpen;
     if (jobOpen) buildRow($('#rowjob'), JOB, 'job');
   }
+  // 每日随机：勾上以后每天换一身，柜子最里面那层没翻到的也会抽到
+  let daily = { on: false, day: '' };
+  try { daily = Object.assign(daily, JSON.parse(localStorage.getItem('crab-daily') || '{}')); } catch (e) {}
+  const saveDaily = () => { try { localStorage.setItem('crab-daily', JSON.stringify(daily)); } catch (e) {} };
+  function rollWear() {
+    const pick = (list) => pickOne(list.filter(([k]) => k !== 'none'))[0];
+    if (Math.random() < 0.3) wear = { head: 'none', neck: 'none', job: pick(JOB) };
+    else wear = { head: Math.random() < 0.85 ? pick(HEAD) : 'none', neck: Math.random() < 0.5 ? pick(NECK) : 'none', job: 'none' };
+    daily.day = today(); saveDaily(); applyWear();
+  }
+  const dw = $('#dailywear'); dw.checked = daily.on;
+  dw.addEventListener('change', () => {
+    daily.on = dw.checked;
+    if (daily.on) { rollWear(); buildRows(); happy(); say(pickOne(['今天穿这身。', '换好了，猜猜明天是什么。', '交给运气了。']), 2400); }
+    else { saveDaily(); say('好，我自己挑。', 1800); }
+  });
+  if (daily.on && daily.day !== today()) { rollWear(); setTimeout(() => say(pickOne(['今天换了一身。', '新衣服，看出来没。']), 2400), 1800); }
   // 隐藏的一层：连点三下"衣柜"两个字
   let titleTaps = [];
   $('#closet h2').addEventListener('click', () => {
