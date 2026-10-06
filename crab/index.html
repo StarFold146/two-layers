@@ -436,6 +436,7 @@ body.five #crab .down { display: none; }
   <div class="topbar"><button class="back" type="button" id="workback">← 回去</button><h2>陪你干活</h2><span class="ghost"></span></div>
   <div id="wtime" role="timer" aria-live="off">00:00:00</div>
   <div id="wline" aria-live="polite"></div>
+  <button class="pill" type="button" id="wbait" hidden>来一局</button>
   <div id="wscene"><canvas id="wrain" aria-hidden="true"></canvas><canvas id="wwin" aria-hidden="true"></canvas><div id="wdesk"></div><div id="wcrab" class="wk" role="button" tabindex="0" aria-label="戳它"></div><div id="wlap"></div><div id="whands"><i class="hl"></i><i class="hr"></i></div><div id="witem" hidden></div></div>
   <div id="wsum" hidden></div>
   <div id="wbtns"></div>
@@ -1768,7 +1769,7 @@ body.five #crab .down { display: none; }
     const before = myLv(), gain = st.result === 'win' ? 40 : 15; rec.xp += gain; saveRec(); gauges();
     await tell(`得到 ${gain} 点经验。`);
     if (myLv() > before) await tell(`升到 Lv${myLv()} 了！血、蓝、攻击都涨了一点。`);
-    if (owed() > 0) await learnSkill();
+    while (owed() > 0 && EXTRA.some(k => !rec.learned.includes(k.id))) await learnSkill();
     endButtons(); return true;
   }
   async function myTurn(sk) {
@@ -1807,7 +1808,7 @@ body.five #crab .down { display: none; }
     stageBg(); gauges(); skillsFor(false);
     await tell(pickOne(['螃蟹 发起了挑战！', '野生的螃蟹跳了出来！', '战斗开始！']));
     if (!named) await tell('（点自己的名字可以改名。）');
-    if (owed() > 0) await learnSkill();
+    while (owed() > 0 && EXTRA.some(k => !rec.learned.includes(k.id))) await learnSkill();
     st.busy = false; await tell(`${myName}要怎么做？`); if (!st.busy) skillsFor(true);
   }
   function openArena() {
@@ -1827,6 +1828,7 @@ body.five #crab .down { display: none; }
     }, { once: true });
   });
   $('#arenaback').addEventListener('click', () => {
+    if (trapMode) { endTrap(); return; }
     tok++; clearInterval(typing); leave(arena);
     const r = st && st.result; happy();
     say(r === 'win' ? pickOne(['下次我不会输。', '再来，我还没热身完。']) : r === 'lose' ? pickOne(['刚才是我运气好。', '再来我也赢。……大概。']) : '这局先欠着。', 2600);
@@ -1979,7 +1981,29 @@ body.five #crab .down { display: none; }
   }
   function wtype(on) { wcrab.classList.toggle('typing', on); $('#whands').classList.toggle('typing', on); keyTaps(on); }
   const TYPE = ['再不跑通我就砸了。', '跑！给我跑！', '……我没砸，我在敲。', '咚咚咚。', '嗒嗒嗒。', '在写，在写。', '这个变量叫什么好。', '跑通了。……又没跑通。', '我写我的，你忙你的。', '这一段删了重写。', '你那边顺吗。'];
-  const MOYU = ['snack', 'snack', 'stretch', 'window', 'peek', 'doze'];
+  // 钓鱼执法：干活的时候它主动邀你打一局，你一进去，它开外挂一招秒了你，"玩什么玩。"
+  let trapMode = false;
+  async function trapBattle() {
+    trapMode = true; arena.hidden = false; tok++; const t = tok;
+    const foeName = $('#foeplate .nm span').textContent, meName = typeof myName !== 'undefined' ? myName : '唯';
+    st = { me: { hp: MAXHP(), mp: MAXMP(), max: MAXHP(), mmax: MAXMP() }, foe: { hp: FOEHP(), mp: 30, max: FOEHP(), mmax: 30 }, busy: true, evade: false, result: null };
+    $('#foe').className = 'fighter'; $('#me').className = 'fighter';
+    $('#foe').replaceChildren(crabCopy()); $('#me').innerHTML = pixSVG(CAT);
+    stageBg(); gauges(); skillsFor(false);
+    await tell(`${foeName} 想要对战！`);
+    await tell(`${foeName}悄悄打开了外挂。`);
+    await tell(`${foeName}使出了「一键秒杀」！`);
+    await lunge('foe'); await hurt('me', st.me.hp); $('#me').classList.add('down');
+    await tell(`${meName}倒下了……`);
+    await tell('玩什么玩。');
+    await tell('回去干活。');
+    if (t === tok) endTrap();
+  }
+  function endTrap() {
+    trapMode = false; tok++; clearInterval(typing); arena.hidden = true;
+    wline(pickOne(['钓鱼执法，懂？', '我盯着你呢。', '摸鱼可以，打游戏不行。']));
+  }
+  const MOYU = ['snack', 'snack', 'stretch', 'window', 'peek', 'doze', 'bait'];
   async function moyu(kind) {
     wbusy = true; wtype(false);
     if (kind === 'snack') {
@@ -1998,6 +2022,12 @@ body.five #crab .down { display: none; }
     } else if (kind === 'peek') {
       wcrab.classList.add('peek'); frontPeek(true); wline(pickOne(['你写到哪了？', '凑过来看一眼。', '……继续，我不吵。', '你认真的时候好专心。'])); await wwait(2600);
       wcrab.classList.remove('peek'); frontPeek(false); await wwait(600);
+    } else if (kind === 'bait') {
+      wline(pickOne(['摸鱼时间到，来一局？', '干累了吧，打一局游戏？', '就一局，没人知道。']));
+      const b = $('#wbait'); b.hidden = false;
+      const took = await new Promise(res => { const t = setTimeout(() => res(false), 8000); b.onclick = () => { clearTimeout(t); res(true); }; });
+      b.hidden = true; b.onclick = null;
+      if (took) await trapBattle(); else { wline(pickOne(['不来？算你定力好。', '……那接着干活。'])); await wwait(1600); }
     } else {
       wcrab.classList.add('doze'); wline('……'); await wwait(2200); wcrab.classList.remove('doze'); wline(pickOne(['没睡！', '我醒着。', '刚才那下不算。'])); await wwait(1200);
     }
